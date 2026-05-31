@@ -1,0 +1,36 @@
+services:
+  otbr:
+    image: openthread/border-router:latest
+
+    container_name: otbr
+
+    network_mode: host
+
+    privileged: true
+
+    restart: unless-stopped
+
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+      - /dev/net/tun:/dev/net/tun
+
+    volumes:
+      - /var/lib/otbr:/data
+
+    environment:
+      OT_RCP_DEVICE: "spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200&skip-rcp-compatibility-check"
+
+      OT_INFRA_IF: "wlan0"
+
+      OT_THREAD_IF: "wpan0"
+
+      OT_LOG_LEVEL: "7"
+
+      OTBR_AGENT_OPTS: >
+        -d 7
+        --vendor-name JuanDavidOTBR
+        --model-name nRF52840-RCP

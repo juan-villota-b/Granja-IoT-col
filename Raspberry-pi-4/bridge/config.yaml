@@ -1,0 +1,55 @@
+bridge:
+  log_level: DEBUG
+  loop_interval_s: 2
+  name: iot-gateway-bridge
+  simulation_mode: true
+  version: 1.0.0
+coap:
+  observe_timeout_s: 300
+  port: 5683
+mqtt:
+  connect_topic: v1/gateway/connect
+  disconnect_topic: v1/gateway/disconnect
+  host: localhost
+  password: ''
+  port: 1883
+  rpc_topic: v1/gateway/rpc
+  telemetry_topic: v1/gateway/telemetry
+  username: MXGYfpiNFAhdNIiDtNB1
+otbr:
+  enabled: false
+  rest_api: http://localhost:8081
+  scan_interval_s: 30
+simulation:
+  enabled: true
+  nodes:
+  - coap_port: 15683
+    node_id: NODO-TH-01
+    pos_x: 25
+    pos_y: 40
+    type: TH
+    zone: ZONA-A
+  - coap_port: 15684
+    node_id: NODO-TH-02
+    pos_x: 50
+    pos_y: 60
+    type: TH
+    zone: ZONA-A
+  - coap_port: 15685
+    node_id: NODO-TH-03
+    pos_x: 10
+    pos_y: 80
+    type: TH
+    zone: ZONA-B
+  - coap_port: 15686
+    node_id: NODO-TH-SED-01
+    pos_x: 30
+    pos_y: 90
+    type: SED
+    zone: ZONA-B
+  - coap_port: 15687
+    node_id: NODO-VALVE-01
+    pos_x: 45
+    pos_y: 35
+    type: valve
+    zone: ZONA-A

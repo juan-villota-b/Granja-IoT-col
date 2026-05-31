@@ -1,0 +1,12 @@
+build/
+*.obj
+*.a
+*.o
+*.bin
+*.elf
+**/sdkconfig.old
+Nodo-router-t-h/build/
+**/__pycache__/
+**/*.pyc
+.env
+*.log
