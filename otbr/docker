@@ -1,0 +1,956 @@
+PrefixManager: Active
+Translator: Active
+Done
+Error 35: InvalidCommand
+PrefixManager: Active
+Translator: Active
+Done
+Error 35: InvalidCommand
+PrefixManager: Active
+Translator: Active
+Done
+0e0800000000000100004a0300001735060004001fffe00708fd22a050dc8b9f3a0c0402a0f7f8051000112233445566778899aabbccddeeff03096a75616e796576657204108105de729409340f3267dea9b7e84b39000300000f0208111111112222222201021001
+Done
+
+> 
+> 
+> ooooo
+Error 35: InvalidCommand
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> ^[^[^[^[^[^C
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> } ^[[A^[[A^[[A
+Error 35: InvalidCommand
+> 
+> 
+> ^C
+> 
+> 
+> aasdhasdsiohasuihdas^C
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> dddd
+Error 35: InvalidCommand
+> d
+Error 35: InvalidCommand
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> ^C
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> ^[[A^[[B^[[A^[[B^[[B^[[B^[[B^[[B^C^[[A
+Error 35: InvalidCommand
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> ^Cotbr  | s6-rc: info: service s6rc-oneshot-runner: starting
+otbr  | s6-rc: info: service s6rc-oneshot-runner successfully started
+otbr  | s6-rc: info: service fix-attrs: starting
+otbr  | s6-rc: info: service fix-attrs successfully started
+otbr  | s6-rc: info: service legacy-cont-init: starting
+otbr  | s6-rc: info: service legacy-cont-init successfully started
+otbr  | s6-rc: info: service otbr-agent: starting
+otbr  | Configuring OpenThread firewall...
+otbr  | Configuring OpenThread NAT64...
+otbr  | Starting otbr-agent...
+otbr  | [NOTE]-AGENT---: Running 0.3.0-b7016fb
+otbr  | [NOTE]-AGENT---: Thread version: 1.4.0
+otbr  | [NOTE]-AGENT---: Thread interface: wpan0
+otbr  | [NOTE]-AGENT---: Radio URL: spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=1000000&skip-rcp-compatibility-check
+otbr  | [NOTE]-AGENT---: Radio URL: trel://wlo1
+otbr  | [NOTE]-ILS-----: Infra link selected: wlo1
+otbr  | [INFO]-RCP_HOS-: OpenThread log level changed to 5
+otbr  | 00:00:00.012 [I] Nat64---------: State: Disabled -> NotRunning
+otbr  | 00:00:00.012 [I] BorderAgent---: Unregistering service OpenThread BR (unspecified vendor) #ABF4 _meshcop._udp
+otbr  | 00:00:00.012 [I] BorderAgent---: Registering service OpenThread BorderRouter #ABF4 _meshcop._udp
+otbr  | 00:00:00.012 [I] BbrLocal------: Add Domain Prefix: ::/0, NotFound
+otbr  | 00:00:00.012 [I] BbrLocal------: Add BBR Service: seqno (72), delay (5s), timeout (3600s), InvalidState
+otbr  | [INFO]-HELPER--: Set state callback: OK
+otbr  | [WARN]-UTILS---: /usr/src/ot-br-posix/src/rest/network_diag_handler.cpp:1300 lacking some attributes for deviceId f6721bac3ee6abf4
+otbr  | [WARN]-UTILS---: /usr/src/ot-br-posix/src/rest/network_diag_handler.cpp:1244 cannot get LeaderData while detached
+otbr  | [WARN]-UTILS---: /usr/src/ot-br-posix/src/rest/rest_devices_coll.cpp:232 - AddItem - f6721bac3ee6abf4
+otbr  | [INFO]-APP-----: Radio Co-processor version: OPENTHREAD/e4d97681c; Zephyr; May 12 2026 19:52:22
+otbr  | [INFO]-REST----: RestWebServer listening on 0.0.0.0:8081
+otbr  | 00:00:00.012 [I] Notifier------: StateChanged (0x521fc310) [MLAddr KeySeqCntr NetData Channel PanId NetName ExtPanId NetworkKey PSKc ...
+otbr  | 00:00:00.012 [I] Notifier------: StateChanged (0x521fc310) ... SecPolicy BbrState ActDset Nat64]
+otbr  | 00:00:00.012 [I] BbrLeader-----: PBBR state: None
+otbr  | 00:00:00.012 [I] Bbr-----------: Start listening on port 61631
+otbr  | 00:00:00.012 [I] Bbr-----------: Backbone TMF subscribes ff32:40:fd22:a050:dc8b:9f3a:0:3: OK
+otbr  | 00:00:00.012 [I] BbrManager----: Start Backbone TMF agent: OK
+otbr  | 00:00:00.012 [I] AnnounceSender: ChannelMask:{ 11-26 }, period:21500
+otbr  | 00:00:00.013 [I] AnnounceSender: StartingChannel:15
+otbr  | 00:00:00.013 [I] AnnounceSender: StartingChannel:15
+otbr  | 00:00:00.016 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:00.020 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:00.023 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:00.027 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:00.031 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:00.031 [I] P-Netif-------: NAT64 CIDR updated to 192.168.255.0/24.
+otbr  | 00:00:00.031 [I] P-Netif-------: Sent request#2 to delete route 192.168.255.0/24
+otbr  | 00:00:00.031 [I] P-Netif-------: Deleting route for NAT64
+otbr  | 00:00:00.031 [I] P-McastRtMgr--: Disable: OK
+otbr  | 00:00:00.031 [I] RouterTable---: Route table
+otbr  | 00:00:00.031 [I] TrelDiscoverer: Registering service otTRELf6721bac3ee6abf4._trel._udp
+otbr  | 00:00:00.031 [I] TrelDiscoverer:     port:52600, ext-addr:f6721bac3ee6abf4, ext-panid:1111111122222222
+otbr  | 00:00:00.031 [I] BorderAgent---: Registering service OpenThread BorderRouter #ABF4 _meshcop._udp
+otbr  | [DEBG]-BBA-----: BackboneAgent: HandleBackboneRouterState: state=1, mBackboneRouterState=0
+otbr  | 00:00:00.031 [I] MulticastDns--: Adding host address 192.168.1.217
+otbr  | 00:00:00.031 [I] MulticastDns--: Adding host address fe80:0:0:0:db89:4813:ee77:95d0
+otbr  | 00:00:00.031 [I] MulticastDns--: Adding host address fd89:e85:a6f0:0:ac1b:68:ccca:9899
+otbr  | 00:00:00.031 [I] MulticastDns--: Adding host address fd89:e85:a6f0:0:df19:acf0:bd4a:e709
+otbr  | 00:00:00.031 [I] MulticastDns--: Adding host address fd89:e85:a6f0:0:0:0:0:81d
+otbr  | 00:00:00.031 [I] P-Netif-------: Host netif is down
+otbr  | 00:00:00.031 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:15, cmd:PROP_VALUE_SET, key:PHY_CHAN, channel:15
+otbr  | 00:00:00.031 [D] P-RadioSpinel-: Wait response: tid=15 key=33
+otbr  | 00:00:00.032 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:15, cmd:PROP_VALUE_IS, key:PHY_CHAN, channel:15
+otbr  | 00:00:00.032 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:1, cmd:PROP_VALUE_SET, key:MAC_RAW_STREAM_ENABLED, enabled:1
+otbr  | 00:00:00.032 [D] P-RadioSpinel-: Wait response: tid=1 key=55
+otbr  | 00:00:00.033 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:1, cmd:PROP_VALUE_IS, key:MAC_RAW_STREAM_ENABLED, enabled:1
+otbr  | 00:00:00.033 [I] P-Netif-------: Added multicast address ff02::1
+otbr  | 00:00:00.033 [I] P-Netif-------: Added multicast address ff03::1
+otbr  | 00:00:00.033 [I] P-Netif-------: Added multicast address ff03::fc
+otbr  | 00:00:00.033 [I] P-Netif-------: Sent request#3 to add fe80::f472:1bac:3ee6:abf4/64
+otbr  | 00:00:00.033 [I] Mle-----------: PeriodicParentSearch: (Re)starting timer for check interval
+otbr  | 00:00:00.033 [I] DnssdServer---: Started
+otbr  | 00:00:00.033 [I] DnssdServer---: Started discovery proxy
+otbr  | 00:00:00.033 [I] BbrLocal------: Remove BBR Service: seqno (72), delay (5s), timeout (3600s), NotFound
+otbr  | 00:00:00.033 [N] Mle-----------: Role disabled -> detached
+otbr  | 00:00:00.033 [I] P-Netif-------: Sent request#4 to add fd22:a050:dc8b:9f3a:cf2:5385:6023:a513/64
+otbr  | 00:00:00.033 [I] P-Netif-------: Added multicast address ff32:40:fd22:a050:dc8b:9f3a:0:1
+otbr  | 00:00:00.033 [I] P-Netif-------: Added multicast address ff33:40:fd22:a050:dc8b:9f3a:0:1
+otbr  | 00:00:00.033 [I] P-Netif-------: Sent request#5 to add fd22:a050:dc8b:9f3a:0:ff:fe00:3000/64
+otbr  | 00:00:00.033 [I] Mle-----------: Attempting to restore prev role: leader
+otbr  | 00:00:00.033 [I] Notifier------: StateChanged (0x1100102d) [Ip6+ Role LLAddr Rloc+ Ip6Mult+ NetifState ActDset]
+otbr  | 00:00:00.033 [I] BbrLeader-----: PBBR state: None
+otbr  | 00:00:00.033 [I] AnnounceSender: Stopped
+otbr  | 00:00:00.033 [N] P-Netif-------: Changing interface state to up.
+otbr  | 00:00:00.034 [I] P-Netif-------: Sent request#6 to delete route 192.168.255.0/24
+otbr  | 00:00:00.034 [I] P-Netif-------: Deleting route for NAT64
+otbr  | 00:00:00.034 [D] P-RadioSpinel-: Trying to get RCP time offset
+otbr  | 00:00:00.034 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:2, cmd:PROP_VALUE_GET, key:TIMESTAMP
+otbr  | 00:00:00.034 [D] P-RadioSpinel-: Wait response: tid=2 key=2050
+otbr  | 00:00:00.035 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:2, cmd:PROP_VALUE_IS, key:TIMESTAMP, timestamp:4292267
+otbr  | 00:00:00.035 [I] BorderAgent---: Registering service OpenThread BorderRouter #ABF4 _meshcop._udp
+otbr  | 00:00:00.035 [I] P-Netif-------: Succeeded to process request#1
+otbr  | 00:00:00.035 [W] P-Netif-------: Failed to process request#2: No such process
+otbr  | 00:00:00.035 [I] P-Netif-------: Succeeded to process request#3
+otbr  | 00:00:00.035 [I] P-Netif-------: ADD [U] fe80::f472:1bac:3ee6:abf4
+otbr  | 00:00:00.035 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:00.035 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:00.035 [I] P-Netif-------: Succeeded to process request#4
+otbr  | 00:00:00.035 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:cf2:5385:6023:a513
+otbr  | 00:00:00.035 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:00.035 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:00.035 [I] P-Netif-------: Succeeded to process request#5
+otbr  | 00:00:00.035 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:0:ff:fe00:3000
+otbr  | 00:00:00.035 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:00.035 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:00.035 [I] P-Netif-------: Host netif is up
+otbr  | 00:00:00.035 [W] P-Netif-------: Failed to process request#6: No such process
+otbr  | 00:00:00.036 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff02::16
+otbr  | 00:00:00.037 [I] Notifier------: StateChanged (0x00001000) [Ip6Mult+]
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:00.037 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:00.040 [I] Settings------: Read NetworkInfo {rloc:0x3000, extaddr:f6721bac3ee6abf4, role:leader, mode:0x0f, version:5, keyseq:0x0, ...
+otbr  | 00:00:00.040 [I] Settings------: ... pid:0x6c10053e, mlecntr:0x7e6, maccntr:0x7d0, mliid:0cf253856023a513}
+otbr  | 00:00:00.043 [I] Settings------: Saved NetworkInfo {rloc:0x3000, extaddr:f6721bac3ee6abf4, role:leader, mode:0x0f, version:5, keyseq:0x0, ...
+otbr  | 00:00:00.043 [I] Settings------: ... pid:0x6c10053e, mlecntr:0xbcf, maccntr:0xbb8, mliid:0cf253856023a513}
+otbr  | 00:00:00.043 [I] Mle-----------: Send Link Request (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:00.044 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:3, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:61, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:00.044 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:00.049 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:3, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:00.049 [I] MeshForwarder-: Sent IPv6 UDP msg, len:82, chksum:6dc9, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:00.049 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:00.049 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | s6-rc: info: service otbr-agent successfully started
+otbr  | s6-rc: info: service otbr-web: starting
+otbr  | s6-rc: info: service otbr-web successfully started
+otbr  | s6-rc: info: service legacy-services: starting
+otbr  | Starting otbr-web...
+otbr  | [INFO]-WEB-----: Running 0.3.0-b7016fb
+otbr  | [INFO]-WEB-----: Border router web started on wpan0
+otbr  | 00:00:00.304 [I] P-Daemon------: Session socket is ready
+otbr  | 00:00:00.304 [D] Cli-----------: Input: state
+otbr  | 00:00:00.304 [D] Cli-----------: Output: detached
+otbr  | 00:00:00.304 [D] Cli-----------: Output: Done
+otbr  | s6-rc: info: service legacy-services successfully started
+otbr  | 00:00:00.726 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:00.726 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:00.823 [I] TrelDiscoverer: DNS-SD service registered successfully
+otbr  | 00:00:00.824 [I] TrelPeerTable-: Added peer otTRELf6721bac3ee6abf4, dnssd-state:resolving
+otbr  | 00:00:00.824 [I] TrelDiscoverer: Peer otTRELf6721bac3ee6abf4 is this device itself
+otbr  | 00:00:00.824 [I] TrelPeerTable-: Deleted peer otTRELf6721bac3ee6abf4, dnssd-state:resolving
+otbr  | 00:00:01.046 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:01.046 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:01.046 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:01.046 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:01.046 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:01.046 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:01.047 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:01.047 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:01.047 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:01.047 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:01.047 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:01.988 [I] Mle-----------: Send Link Request (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:01.988 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:4, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:61, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:01.988 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:01.992 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:4, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:01.992 [I] MeshForwarder-: Sent IPv6 UDP msg, len:82, chksum:6681, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:01.993 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:01.993 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:02.947 [I] P-Daemon------: Session socket is ready
+otbr  | 00:00:04.049 [I] Mle-----------: Send Link Request (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:04.049 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:5, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:61, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:04.049 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:04.053 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:5, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:04.053 [I] MeshForwarder-: Sent IPv6 UDP msg, len:82, chksum:c203, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:04.053 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:04.053 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:04.373 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:04.886 [D] P-InfraNetif--: Failed to handle ICMPv6 message: Drop
+otbr  | 00:00:06.114 [I] Mle-----------: Send Link Request (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:06.115 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:6, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:61, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:06.115 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:06.119 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:6, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:06.119 [I] MeshForwarder-: Sent IPv6 UDP msg, len:82, chksum:efe8, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:06.119 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:06.119 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:08.114 [I] Mle-----------: Failed to restore prev role
+otbr  | 00:00:08.114 [I] BbrLocal------: Remove BBR Service: seqno (72), delay (5s), timeout (3600s), NotFound
+otbr  | 00:00:08.114 [N] Mle-----------: RLOC16 3000 -> fffe
+otbr  | 00:00:08.115 [I] P-Netif-------: Sent request#7 to remove fd22:a050:dc8b:9f3a:0:ff:fe00:3000/64
+otbr  | 00:00:08.115 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:7, cmd:PROP_VALUE_SET, key:MAC_15_4_SADDR, saddr:0xfffe
+otbr  | 00:00:08.115 [D] P-RadioSpinel-: Wait response: tid=7 key=53
+otbr  | 00:00:08.116 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:7, cmd:PROP_VALUE_IS, key:MAC_15_4_SADDR, saddr:0xfffe
+otbr  | 00:00:08.116 [I] Mle-----------: AttachState Idle -> Start
+otbr  | 00:00:08.116 [I] Notifier------: StateChanged (0x00000040) [Rloc-]
+otbr  | 00:00:08.116 [I] P-Netif-------: DEL [U] fd22:a050:dc8b:9f3a:0:ff:fe00:3000 (not found, ignored)
+otbr  | 00:00:08.116 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:08.116 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:08.116 [I] P-Netif-------: Succeeded to process request#7
+otbr  | 00:00:08.451 [N] Mle-----------: Attach attempt 1, AnyPartition reattaching with Active Dataset
+otbr  | 00:00:08.451 [I] Mle-----------: AttachState Start -> ParentReq
+otbr  | 00:00:08.451 [I] Mle-----------: Send Parent Request to routers (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:08.451 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:8, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:63, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:08.451 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:08.455 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:8, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:08.455 [I] MeshForwarder-: Sent IPv6 UDP msg, len:84, chksum:9cca, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:08.455 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:08.455 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:09.201 [I] Mle-----------: Send Parent Request to routers (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:09.201 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:9, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:63, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:09.201 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:09.205 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:9, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:09.206 [I] MeshForwarder-: Sent IPv6 UDP msg, len:84, chksum:4f78, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:09.206 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:09.206 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:09.951 [I] Mle-----------: Send Parent Request to routers and REEDs (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:09.951 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:10, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:63, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:09.951 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:09.955 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:10, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:09.956 [I] MeshForwarder-: Sent IPv6 UDP msg, len:84, chksum:9771, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:09.956 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:09.956 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:11.201 [I] Mle-----------: Send Parent Request to routers and REEDs (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:11.201 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:11, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:63, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:11.201 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:11.205 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:11, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:11.205 [I] MeshForwarder-: Sent IPv6 UDP msg, len:84, chksum:720e, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:11.205 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:11.205 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:12.451 [I] Mle-----------: Send Parent Request to routers and REEDs (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:12.451 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:12, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:63, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:12.451 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:12.456 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:12, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:12.456 [I] MeshForwarder-: Sent IPv6 UDP msg, len:84, chksum:d559, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:12.457 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:12.457 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:12.565 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:13.701 [I] Mle-----------: Send Parent Request to routers and REEDs (ff02:0:0:0:0:0:0:2)
+otbr  | 00:00:13.701 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:13, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:63, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:13.701 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:13.705 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:13, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:13.706 [I] MeshForwarder-: Sent IPv6 UDP msg, len:84, chksum:0123, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:13.706 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:13.706 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:2]:19788
+otbr  | 00:00:14.951 [I] Mle-----------: AttachState ParentReq -> Idle
+otbr  | 00:00:14.952 [N] RouterTable---: Allocate router id 12
+otbr  | 00:00:14.952 [N] Mle-----------: RLOC16 fffe -> 3000
+otbr  | 00:00:14.952 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:14, cmd:PROP_VALUE_SET, key:MAC_15_4_SADDR, saddr:0x3000
+otbr  | 00:00:14.952 [D] P-RadioSpinel-: Wait response: tid=14 key=53
+otbr  | 00:00:14.952 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:14, cmd:PROP_VALUE_IS, key:MAC_15_4_SADDR, saddr:0x3000
+otbr  | 00:00:14.953 [I] P-Netif-------: Sent request#8 to add fd22:a050:dc8b:9f3a:0:ff:fe00:3000/64
+otbr  | 00:00:14.953 [N] Mle-----------: Role detached -> leader
+otbr  | 00:00:14.953 [I] P-Netif-------: Added multicast address ff02::2
+otbr  | 00:00:14.953 [I] P-Netif-------: Added multicast address ff03::2
+otbr  | 00:00:14.953 [I] P-Netif-------: Sent request#9 to add fd22:a050:dc8b:9f3a:0:ff:fe00:fc00/64
+otbr  | 00:00:14.953 [N] Mle-----------: Partition ID 0x2bb76b05
+otbr  | 00:00:14.953 [I] RouterTable---: Route table changed [ self+ ]
+otbr  | 00:00:14.953 [I] RouterTable---: Route table
+otbr  | 00:00:14.953 [I] RouterTable---:     12 0x3000 - me - leader
+otbr  | 00:00:14.953 [I] Notifier------: StateChanged (0x100012a5) [Ip6+ Role Rloc+ PartitionId NetData Ip6Mult+ ActDset]
+otbr  | 00:00:14.953 [I] Mle-----------: Send Data Response (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:14.959 [I] Settings------: Saved NetworkInfo {rloc:0x3000, extaddr:f6721bac3ee6abf4, role:leader, mode:0x0f, version:5, keyseq:0x0, ...
+otbr  | 00:00:14.959 [I] Settings------: ... pid:0x2bb76b05, mlecntr:0xbd9, maccntr:0xbb8, mliid:0cf253856023a513}
+otbr  | 00:00:14.959 [I] BbrLeader-----: PBBR state: None
+otbr  | 00:00:14.959 [I] BbrLocal------: Add BBR Service: seqno (72), delay (5s), timeout (3600s), OK
+otbr  | 00:00:14.959 [I] NetworkData---: Sent ServerData
+otbr  | 00:00:14.959 [I] AnnounceSender: Started
+otbr  | 00:00:14.959 [I] BorderAgent---: Border Agent start listening on port 49154
+otbr  | 00:00:14.959 [I] BorderRouting-: RIO Preference changed: low -> medium
+otbr  | 00:00:14.959 [I] BorderRouting-: Starting
+otbr  | 00:00:14.959 [I] BorderRouting-: RsSender: Starting - will send first RS in 697 msec
+otbr  | 00:00:14.959 [I] BorderRouting-: Set local OMR prefix fd00:8539:6c11:1::/64 (prf:low, def-route:no, origin:self-gen)
+otbr  | 00:00:14.959 [I] BorderRouting-: Will add local OMR prefix fd00:8539:6c11:1::/64 (prf:low, def-route:no, origin:self-gen) in 3550 msec to NetData
+otbr  | 00:00:14.959 [I] BorderRouting-: Starting Nat64PrefixManager
+otbr  | 00:00:14.959 [I] BorderRouting-: Will evaluate routing policy in 00:03.263 (3263 msec)
+otbr  | 00:00:14.959 [I] MultiAilDetect: State: Stopped -> Running
+otbr  | 00:00:14.963 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:14.967 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:14.971 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:14.974 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:14.977 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:14.978 [I] BorderRouting-: Will evaluate routing policy in 00:02.046 (2046 msec)
+otbr  | 00:00:14.978 [I] BorderRouting-: NAT64 prefix timer scheduled in 300 seconds
+otbr  | 00:00:14.978 [I] P-Netif-------: Succeeded to process request#8
+otbr  | [INFO]-BA------: Start Thread Border Agent
+otbr  | 00:00:14.978 [I] NetworkData---: Received ServerData
+otbr  | 00:00:14.978 [I] NetworkData---: Allocated Service ID = 0
+otbr  | 00:00:14.978 [I] NetworkData---: Sent ServerData ack
+otbr  | 00:00:14.978 [I] BorderAgent---: Registering service OpenThread BorderRouter #ABF4 _meshcop._udp
+otbr  | 00:00:14.978 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:0:ff:fe00:3000
+otbr  | 00:00:14.978 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:14.978 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:14.978 [I] Notifier------: StateChanged (0x00000200) [NetData]
+otbr  | 00:00:14.978 [I] Mle-----------: Send Data Response (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:14.978 [I] P-Netif-------: Sent request#10 to add fd22:a050:dc8b:9f3a:0:ff:fe00:fc10/64
+otbr  | 00:00:14.979 [I] BbrLeader-----: PBBR state: Added
+otbr  | 00:00:14.979 [I] BbrLeader-----: Rloc16:0x3000, seqno:72, delay:5, timeout:3600
+otbr  | 00:00:14.979 [I] P-Netif-------: Sent request#11 to add fd22:a050:dc8b:9f3a:0:ff:fe00:fc38/64
+otbr  | 00:00:14.979 [I] BorderRouting-: Will evaluate routing policy in 00:02.749 (2749 msec)
+otbr  | 00:00:14.982 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:14.985 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:14.988 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:14.991 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:14.995 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:14.995 [I] P-Netif-------: Succeeded to process request#9
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:14.995 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:14.995 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:15, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:75, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:14.995 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:14.995 [I] Notifier------: StateChanged (0x02000001) [Ip6+ BbrState]
+otbr  | 00:00:14.995 [I] Bbr-----------: Start listening on port 61631
+otbr  | 00:00:14.995 [I] Bbr-----------: Backbone TMF subscribes ff32:40:fd22:a050:dc8b:9f3a:0:3: OK
+otbr  | 00:00:14.995 [I] BbrManager----: Start Backbone TMF agent: OK
+otbr  | 00:00:14.995 [I] P-McastRtMgr--: Enable: OK
+otbr  | [DEBG]-BBA-----: BackboneAgent: HandleBackboneRouterState: state=2, mBackboneRouterState=1
+otbr  | [NOTE]-BBA-----: BackboneAgent: Backbone Router becomes Primary!
+otbr  | 00:00:14.996 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:0:ff:fe00:fc00
+otbr  | 00:00:14.996 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:14.996 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:14.996 [I] BorderAgent---: Registering service OpenThread BorderRouter #ABF4 _meshcop._udp
+otbr  | 00:00:14.997 [I] P-Netif-------: Succeeded to process request#10
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:0:ff:fe00:fc10
+otbr  | 00:00:14.997 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:14.997 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:14.997 [I] P-Netif-------: Succeeded to process request#11
+otbr  | 00:00:14.997 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:0:ff:fe00:fc38
+otbr  | 00:00:14.997 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:14.997 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:15.002 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:15, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:15.002 [I] MeshForwarder-: Sent IPv6 UDP msg, len:96, chksum:f6d9, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:15.002 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:15.002 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:15.002 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:1, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:91, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:15.002 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:15.007 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:1, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:15.008 [I] MeshForwarder-: Sent IPv6 UDP msg, len:112, chksum:8061, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:15.008 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:15.008 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:15.637 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:15.637 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:15.638 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:15.656 [I] BorderRouting-: RsSender: Sent RS 1/3
+otbr  | 00:00:15.658 [I] BorderRouting-: Received RA from fe80:0:0:0:6238:e0ff:fe12:9d41 on infra netif 3 
+otbr  | 00:00:15.658 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:0
+otbr  | 00:00:15.658 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:15.658 [I] BorderRouting-: - PIO fd89:e85:a6f0:0::/64 (valid:5400, preferred:2700, flags - L:1 A:1 P:0)
+otbr  | 00:00:15.658 [I] BorderRouting-: - RIO fd89:e85:a6f0::/48 (lifetime:5400, prf:medium)
+otbr  | 00:00:15.658 [I] BorderRouting-: - RDNSS fd89:e85:a6f0:0:0:0:0:1 (lifetime:2700)
+otbr  | 00:00:15.658 [I] P-Resolver----: Set recursive DNS server list, count: 1
+otbr  | 00:00:15.885 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:15.885 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:2, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:15.885 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:15.893 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:2, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:15.893 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:e868, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:15.893 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:15.893 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:16.739 [I] MlrManager----: Reregister
+otbr  | 00:00:17.024 [I] BorderRouting-: Evaluating routing policy
+otbr  | 00:00:17.024 [I] BorderRouting-: RoutePublisher state: none -> ula
+otbr  | 00:00:17.024 [I] NetDataPublshr: Publishing ExternalRoute fc00::/7
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fc00::/7 - State: NoEntry -> ToAdd
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fc00::/7 (state:ToAdd) in netdata - total:0, preferred:0, desired:10
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fc00::/7 - State: ToAdd -> Adding
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fc00::/7 (state:Adding) - update in 463 msec
+otbr  | 00:00:17.024 [I] BorderRouting-: Evaluating NAT64 prefix
+otbr  | 00:00:17.024 [I] NetDataPublshr: Publishing ExternalRoute fd00:8539:6c11:2:0:0::/96
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 - State: NoEntry -> ToAdd
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 (state:ToAdd) in netdata - total:0, preferred:0, desired:10
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 - State: ToAdd -> Adding
+otbr  | 00:00:17.024 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 (state:Adding) - update in 3071 msec
+otbr  | 00:00:17.024 [I] Nat64---------: NAT64 Prefix: ::/0 -> fd00:8539:6c11:2:0:0::/96
+otbr  | 00:00:17.024 [I] Nat64---------: State: NotRunning -> Active
+otbr  | 00:00:17.024 [I] BorderRouting-: Will evaluate routing policy in 00:17.102 (17102 msec)
+otbr  | 00:00:17.024 [I] Notifier------: StateChanged (0x40000000) [Nat64]
+otbr  | 00:00:17.024 [I] P-Netif-------: Sent request#12 to add route 192.168.255.0/24
+otbr  | 00:00:17.024 [I] P-Netif-------: Adding route for NAT64
+otbr  | 00:00:17.024 [I] P-Netif-------: Succeeded to process request#12
+otbr  | 00:00:17.367 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:17.367 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:3, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:17.367 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:17.372 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:3, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:17.373 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:26b3, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:17.373 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:17.373 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:17.487 [I] NetDataPublshr: ExternalRoute fc00::/7 - State: Adding -> Added
+otbr  | 00:00:17.487 [I] NetworkData---: Sent ServerData
+otbr  | 00:00:17.487 [I] NetworkData---: Received ServerData
+otbr  | 00:00:17.487 [I] NetworkData---: Sent ServerData ack
+otbr  | 00:00:17.487 [I] Notifier------: StateChanged (0x00000200) [NetData]
+otbr  | 00:00:17.487 [I] Mle-----------: Send Data Response (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:17.487 [I] BbrLeader-----: PBBR state: Unchanged
+otbr  | 00:00:17.487 [I] BbrLeader-----: Rloc16:0x3000, seqno:72, delay:5, timeout:3600
+otbr  | 00:00:17.487 [I] BorderRouting-: Will evaluate routing policy in 00:03.905 (3905 msec)
+otbr  | 00:00:17.487 [I] NetDataPublshr: ExternalRoute fc00::/7 (state:Added) in netdata - total:1, preferred:0, desired:10
+otbr  | 00:00:17.487 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 (state:Adding) in netdata - total:0, preferred:0, desired:10
+otbr  | 00:00:17.492 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:17.495 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:17.500 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:17.504 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:17.508 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:17.509 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:4, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:101, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:17.509 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:17.514 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:4, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:17.514 [I] MeshForwarder-: Sent IPv6 UDP msg, len:122, chksum:6324, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:17.514 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:17.514 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:18.509 [I] BorderRouting-: Added local OMR prefix fd00:8539:6c11:1::/64 (prf:low, def-route:no, origin:self-gen) in NetData
+otbr  | 00:00:18.509 [I] BorderRouting-: Favored OMR prefix: (none) -> fd00:8539:6c11:1::/64 (prf:low, local)
+otbr  | 00:00:18.509 [I] NetworkData---: Sent ServerData
+otbr  | 00:00:18.509 [I] BorderAgent---: Registering service OpenThread BorderRouter #ABF4 _meshcop._udp
+otbr  | 00:00:18.510 [I] NetworkData---: Received ServerData
+otbr  | 00:00:18.510 [I] NetworkData---: Sent ServerData ack
+otbr  | 00:00:18.510 [I] Notifier------: StateChanged (0x00000200) [NetData]
+otbr  | 00:00:18.510 [I] Mle-----------: Send Data Response (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:18.510 [I] BbrLeader-----: PBBR state: Unchanged
+otbr  | 00:00:18.510 [I] BbrLeader-----: Rloc16:0x3000, seqno:72, delay:5, timeout:3600
+otbr  | 00:00:18.510 [I] Settings------: Read SlaacIidSecretKey
+otbr  | 00:00:18.510 [I] Slaac---------: Adding fd00:8539:6c11:1:159b:c24b:d08d:2527
+otbr  | 00:00:18.510 [I] P-Netif-------: Sent request#13 to add fd00:8539:6c11:1:159b:c24b:d08d:2527/64
+otbr  | 00:00:18.510 [I] BorderRouting-: Will evaluate routing policy in 00:03.305 (3305 msec)
+otbr  | 00:00:18.511 [I] NetDataPublshr: ExternalRoute fc00::/7 (state:Added) in netdata - total:1, preferred:0, desired:10
+otbr  | 00:00:18.511 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 (state:Adding) in netdata - total:0, preferred:0, desired:10
+otbr  | 00:00:18.516 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:18.520 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:18.524 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd00:8539:6c11:1::/64 -exist` = 0
+otbr  | 00:00:18.528 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:18.533 [I] Platform------: Execute command `ipset add otbr-ingress-allow-dst-swap fd00:8539:6c11:1::/64 -exist` = 0
+otbr  | 00:00:18.536 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:18.539 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:18.539 [I] Notifier------: StateChanged (0x00000001) [Ip6+]
+otbr  | 00:00:18.539 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [U] fd00:8539:6c11:1:159b:c24b:d08d:2527
+otbr  | 00:00:18.539 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:18.539 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:18.539 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:18.540 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:5, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:123, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:18.540 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:18.540 [I] P-Netif-------: Succeeded to process request#13
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:18.540 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:18.546 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:5, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:18.546 [I] MeshForwarder-: Sent IPv6 UDP msg, len:144, chksum:20f4, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:18.546 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:18.546 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:19.477 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:19.478 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:19.656 [I] BorderRouting-: RsSender: Sent RS 2/3
+otbr  | 00:00:19.658 [I] BorderRouting-: Received RA from fe80:0:0:0:6238:e0ff:fe12:9d41 on infra netif 3 
+otbr  | 00:00:19.658 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:0
+otbr  | 00:00:19.658 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:19.658 [I] BorderRouting-: - PIO fd89:e85:a6f0:0::/64 (valid:5400, preferred:2700, flags - L:1 A:1 P:0)
+otbr  | 00:00:19.658 [I] BorderRouting-: - RIO fd89:e85:a6f0::/48 (lifetime:5400, prf:medium)
+otbr  | 00:00:19.658 [I] BorderRouting-: - RDNSS fd89:e85:a6f0:0:0:0:0:1 (lifetime:2700)
+otbr  | 00:00:19.830 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:0, cmd:PROP_VALUE_IS, key:STREAM_RAW, len:78, rssi:-35 ...
+otbr  | 00:00:19.830 [D] P-SpinelDrive-: ... noise:-128, flags:0x0000, channel:15, lqi:228, timestamp:0, rxerr:0
+otbr  | 00:00:19.830 [I] MeshForwarder-: Received IPv6 UDP msg, len:83, chksum:d03a, ecn:no, from:627b052166d42312, sec:no, prio:net, rss:-35.0, radio:15.4
+otbr  | 00:00:19.830 [I] MeshForwarder-:     src:[fe80:0:0:0:607b:521:66d4:2312]:19788
+otbr  | 00:00:19.830 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:19.830 [I] Mle-----------: Receive Announce (fe80:0:0:0:607b:521:66d4:2312)
+otbr  | 00:00:19.830 [I] Mle-----------: Send Announce on channel 20
+otbr  | 00:00:19.830 [I] Mle-----------: Send Announce on channel 20
+otbr  | 00:00:19.830 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:6, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:82, channel:20, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:19.830 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:00:19.835 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:6, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:19.835 [I] MeshForwarder-: Sent IPv6 UDP msg, len:83, chksum:cf1b, ecn:no, to:0xffff, sec:yes, prio:net, radio:all
+otbr  | 00:00:19.835 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:19.835 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:19.835 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:7, cmd:PROP_VALUE_SET, key:PHY_CHAN, channel:15
+otbr  | 00:00:19.835 [D] P-RadioSpinel-: Wait response: tid=7 key=33
+otbr  | 00:00:19.836 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:7, cmd:PROP_VALUE_IS, key:PHY_CHAN, channel:15
+otbr  | 00:00:19.837 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:8, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:87, channel:20, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:19.837 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:00:19.837 [I] Mac-----------: Frame tx failed, error:Abort, len:85, seqnum:129, type:Data, src:f6721bac3ee6abf4, dst:627b052166d42312, sec:yes, ackreq:yes, radio:trel
+otbr  | 00:00:19.843 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:8, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:19.843 [I] MeshForwarder-: Sent IPv6 UDP msg, len:83, chksum:100a, ecn:no, to:627b052166d42312, sec:yes, prio:net, radio:all
+otbr  | 00:00:19.843 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:19.843 [I] MeshForwarder-:     dst:[fe80:0:0:0:607b:521:66d4:2312]:19788
+otbr  | 00:00:19.843 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:9, cmd:PROP_VALUE_SET, key:PHY_CHAN, channel:15
+otbr  | 00:00:19.843 [D] P-RadioSpinel-: Wait response: tid=9 key=33
+otbr  | 00:00:19.843 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:9, cmd:PROP_VALUE_IS, key:PHY_CHAN, channel:15
+otbr  | 00:00:20.095 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 - State: Adding -> Added
+otbr  | 00:00:20.095 [I] NetworkData---: Sent ServerData
+otbr  | 00:00:20.095 [I] NetworkData---: Received ServerData
+otbr  | 00:00:20.095 [I] NetworkData---: Sent ServerData ack
+otbr  | 00:00:20.095 [I] Notifier------: StateChanged (0x00000200) [NetData]
+otbr  | 00:00:20.095 [I] Mle-----------: Send Data Response (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:20.095 [I] BbrLeader-----: PBBR state: Unchanged
+otbr  | 00:00:20.095 [I] BbrLeader-----: Rloc16:0x3000, seqno:72, delay:5, timeout:3600
+otbr  | 00:00:20.095 [I] BorderRouting-: Will evaluate routing policy in 00:03.793 (3793 msec)
+otbr  | 00:00:20.095 [I] NetDataPublshr: ExternalRoute fc00::/7 (state:Added) in netdata - total:1, preferred:0, desired:10
+otbr  | 00:00:20.096 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 (state:Added) in netdata - total:1, preferred:0, desired:10
+otbr  | 00:00:20.100 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:20.104 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:20.107 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd00:8539:6c11:1::/64 -exist` = 0
+otbr  | 00:00:20.110 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:20.113 [I] Platform------: Execute command `ipset add otbr-ingress-allow-dst-swap fd00:8539:6c11:1::/64 -exist` = 0
+otbr  | 00:00:20.117 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:20.120 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:20.120 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:10, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:121, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:20.120 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:00:20.129 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:10, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:20.129 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:11, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:20.129 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:00:20.135 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:11, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:20.135 [I] MeshForwarder-: Sent IPv6 UDP msg, len:165, chksum:0c84, ecn:no, to:0xffff, sec:yes, prio:net, radio:all
+otbr  | 00:00:20.135 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:20.135 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:21.392 [I] BorderRouting-: Evaluating routing policy
+otbr  | 00:00:21.392 [I] BorderRouting-: Evaluating NAT64 prefix
+otbr  | 00:00:21.392 [I] BorderRouting-: Will evaluate routing policy in 00:16.944 (16944 msec)
+otbr  | 00:00:21.595 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:21.595 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:12, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:21.595 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:21.601 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:12, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:21.601 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:6cad, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:21.601 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:21.601 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:23.656 [I] BorderRouting-: RsSender: Sent RS 3/3
+otbr  | 00:00:23.658 [I] BorderRouting-: Received RA from fe80:0:0:0:6238:e0ff:fe12:9d41 on infra netif 3 
+otbr  | 00:00:23.658 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:0
+otbr  | 00:00:23.658 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:23.658 [I] BorderRouting-: - PIO fd89:e85:a6f0:0::/64 (valid:5400, preferred:2700, flags - L:1 A:1 P:0)
+otbr  | 00:00:23.658 [I] BorderRouting-: - RIO fd89:e85:a6f0::/48 (lifetime:5400, prf:medium)
+otbr  | 00:00:23.658 [I] BorderRouting-: - RDNSS fd89:e85:a6f0:0:0:0:0:1 (lifetime:2700)
+otbr  | 00:00:24.656 [I] BorderRouting-: RsSender: Finished sending RS msgs and waiting for RAs
+otbr  | 00:00:24.656 [I] BorderRouting-: Will evaluate routing policy in 00:02.865 (2865 msec)
+otbr  | 00:00:24.656 [I] BorderRouting-: Will evaluate routing policy immediately
+otbr  | 00:00:24.656 [I] BorderRouting-: Evaluating routing policy
+otbr  | 00:00:24.656 [I] BorderRouting-: AIL on-link prefix (from processed RAs) changed: ::/0 -> fd89:e85:a6f0:0::/64
+otbr  | 00:00:24.656 [I] BorderRouting-: Favored on-link prefix: ::/0 -> fd89:e85:a6f0:0::/64
+otbr  | 00:00:24.657 [I] BorderRouting-: Evaluating NAT64 prefix
+otbr  | 00:00:24.657 [I] BorderRouting-: Preparing RA
+otbr  | 00:00:24.657 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:1
+otbr  | 00:00:24.657 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:24.657 [I] BorderRouting-: - RIO fd00:8539:6c11:1::/64 (lifetime:1800, prf:medium)
+otbr  | 00:00:24.657 [I] BorderRouting-: Sent RA on infra netif 3
+otbr  | 00:00:24.657 [I] SrpServer-----: Selected port 53536
+otbr  | 00:00:24.657 [I] NetDataPublshr: Publishing DNS/SRP service unicast (ml-eid, port:53536, ver:0)
+otbr  | 00:00:24.657 [I] NetDataPublshr: DNS/SRP service - State: NoEntry -> ToAdd
+otbr  | 00:00:24.657 [I] NetDataPublshr: DNS/SRP service (state:ToAdd) in netdata - total:0, preferred:0, desired:2
+otbr  | 00:00:24.657 [I] NetDataPublshr: DNS/SRP service - State: ToAdd -> Adding
+otbr  | 00:00:24.657 [I] NetDataPublshr: DNS/SRP service (state:Adding) - update in 650 msec
+otbr  | 00:00:24.657 [I] BorderRouting-: Will evaluate routing policy in 00:15.111 (15111 msec)
+otbr  | 00:00:24.658 [I] BorderRouting-: Received RA from fe80:0:0:0:db89:4813:ee77:95d0 on infra netif 3 (this BR routing-manager)
+otbr  | 00:00:25.307 [I] NetDataPublshr: DNS/SRP service - State: Adding -> Added
+otbr  | 00:00:25.307 [I] SrpServer-----: Start listening on port 53536
+otbr  | 00:00:25.307 [I] SrpAdvProxy---: Started
+otbr  | 00:00:25.307 [I] NetworkData---: Sent ServerData
+otbr  | 00:00:25.307 [I] NetworkData---: Received ServerData
+otbr  | 00:00:25.308 [I] NetworkData---: Allocated Service ID = 1
+otbr  | 00:00:25.308 [I] NetworkData---: Sent ServerData ack
+otbr  | 00:00:25.308 [I] Notifier------: StateChanged (0x00000200) [NetData]
+otbr  | 00:00:25.308 [I] Mle-----------: Send Data Response (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:25.308 [I] P-Netif-------: Sent request#14 to add fd22:a050:dc8b:9f3a:0:ff:fe00:fc11/64
+otbr  | 00:00:25.308 [I] BbrLeader-----: PBBR state: Unchanged
+otbr  | 00:00:25.308 [I] BbrLeader-----: Rloc16:0x3000, seqno:72, delay:5, timeout:3600
+otbr  | 00:00:25.308 [I] BorderRouting-: Will evaluate routing policy in 00:02.391 (2391 msec)
+otbr  | 00:00:25.308 [I] SrpClient-----: AutoStartState 1stTimeSelect -> Unicast
+otbr  | 00:00:25.308 [I] SrpClient-----: Requesting max tx jitter 10000 (OnServerStart)
+otbr  | 00:00:25.309 [I] SrpClient-----: Auto-starting, server [fd22:a050:dc8b:9f3a:cf2:5385:6023:a513]:53536
+otbr  | 00:00:25.309 [I] SrpClient-----: State Stopped -> Updated
+otbr  | 00:00:25.309 [I] NetDataPublshr: DNS/SRP service (state:Added) in netdata - total:1, preferred:0, desired:2
+otbr  | 00:00:25.309 [I] NetDataPublshr: ExternalRoute fc00::/7 (state:Added) in netdata - total:1, preferred:0, desired:10
+otbr  | 00:00:25.309 [I] NetDataPublshr: ExternalRoute fd00:8539:6c11:2:0:0::/96 (state:Added) in netdata - total:1, preferred:0, desired:10
+otbr  | 00:00:25.314 [I] Platform------: Execute command `ipset flush otbr-ingress-allow-dst-swap` = 0
+otbr  | 00:00:25.319 [I] Platform------: Execute command `ipset flush otbr-ingress-deny-src-swap` = 0
+otbr  | 00:00:25.323 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd00:8539:6c11:1::/64 -exist` = 0
+otbr  | 00:00:25.327 [I] Platform------: Execute command `ipset add otbr-ingress-deny-src-swap fd22:a050:dc8b:9f3a::/64 -exist` = 0
+otbr  | 00:00:25.330 [I] Platform------: Execute command `ipset add otbr-ingress-allow-dst-swap fd00:8539:6c11:1::/64 -exist` = 0
+otbr  | 00:00:25.335 [I] Platform------: Execute command `ipset swap otbr-ingress-deny-src-swap otbr-ingress-deny-src` = 0
+otbr  | 00:00:25.339 [I] Platform------: Execute command `ipset swap otbr-ingress-allow-dst-swap otbr-ingress-allow-dst` = 0
+otbr  | 00:00:25.339 [I] Notifier------: StateChanged (0x00000001) [Ip6+]
+otbr  | 00:00:25.339 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:25.339 [I] P-Netif-------: Succeeded to process request#14
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:25.340 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:13, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:121, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:25.340 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [U] fd22:a050:dc8b:9f3a:0:ff:fe00:fc11
+otbr  | 00:00:25.340 [D] P-Netif-------: Unexpected address type (6).
+otbr  | 00:00:25.340 [D] P-Netif-------: Unexpected address type (8).
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:25.340 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:25.346 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:13, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:25.347 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:14, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:96, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:25.347 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:00:25.352 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:14, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:25.352 [I] MeshForwarder-: Sent IPv6 UDP msg, len:192, chksum:1851, ecn:no, to:0xffff, sec:yes, prio:net, radio:all
+otbr  | 00:00:25.352 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:25.352 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:25.877 [I] BorderRouting-: Received NA from router fe80:0:0:0:6238:e0ff:fe12:9d41
+otbr  | 00:00:26.196 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:26.196 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff03::2 (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff02::2 (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff33:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff32:40:fd22:a050:dc8b:9f3a:0:1 (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff03::fc (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff03::1 (already subscribed, ignored)
+otbr  | 00:00:26.197 [I] P-Netif-------: ADD [M] ff02::16 (already subscribed, ignored)
+otbr  | 00:00:27.292 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:27.292 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:15, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:27.292 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:27.302 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:15, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:27.303 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:24e3, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:27.303 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:27.303 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:27.699 [I] BorderRouting-: Evaluating routing policy
+otbr  | 00:00:27.699 [I] BorderRouting-: Evaluating NAT64 prefix
+otbr  | 00:00:27.699 [I] BorderRouting-: Preparing RA
+otbr  | 00:00:27.699 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:1
+otbr  | 00:00:27.699 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:27.699 [I] BorderRouting-: - RIO fd00:8539:6c11:1::/64 (lifetime:1800, prf:medium)
+otbr  | 00:00:27.699 [I] BorderRouting-: Sent RA on infra netif 3
+otbr  | 00:00:27.699 [I] BorderRouting-: Will evaluate routing policy in 00:15.186 (15186 msec)
+otbr  | 00:00:27.700 [I] BorderRouting-: Received RA from fe80:0:0:0:db89:4813:ee77:95d0 on infra netif 3 (this BR routing-manager)
+otbr  | 00:00:28.948 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:00:37.418 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:37.419 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:1, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:37.419 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:37.424 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:1, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:37.424 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:a85d, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:37.424 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:37.424 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:42.885 [I] BorderRouting-: Evaluating routing policy
+otbr  | 00:00:42.885 [I] BorderRouting-: Evaluating NAT64 prefix
+otbr  | 00:00:42.885 [I] BorderRouting-: Preparing RA
+otbr  | 00:00:42.885 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:1
+otbr  | 00:00:42.885 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:42.885 [I] BorderRouting-: - RIO fd00:8539:6c11:1::/64 (lifetime:1800, prf:medium)
+otbr  | 00:00:42.885 [I] BorderRouting-: Sent RA on infra netif 3
+otbr  | 00:00:42.885 [I] BorderRouting-: Will evaluate routing policy in 00:15.137 (15137 msec)
+otbr  | 00:00:42.886 [I] BorderRouting-: Received RA from fe80:0:0:0:db89:4813:ee77:95d0 on infra netif 3 (this BR routing-manager)
+otbr  | 00:00:52.024 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:00:52.024 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:2, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:00:52.024 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:00:52.030 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:2, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:00:52.030 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:5c91, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:00:52.030 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:00:52.030 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:00:58.022 [I] BorderRouting-: Evaluating routing policy
+otbr  | 00:00:58.022 [I] BorderRouting-: Evaluating NAT64 prefix
+otbr  | 00:00:58.022 [I] BorderRouting-: Preparing RA
+otbr  | 00:00:58.022 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:1
+otbr  | 00:00:58.022 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:00:58.022 [I] BorderRouting-: - RIO fd00:8539:6c11:1::/64 (lifetime:1800, prf:medium)
+otbr  | 00:00:58.022 [I] BorderRouting-: Sent RA on infra netif 3
+otbr  | 00:00:58.022 [I] BorderRouting-: Will evaluate routing policy in 02:45.129 (165129 msec)
+otbr  | 00:00:58.023 [I] BorderRouting-: Received RA from fe80:0:0:0:db89:4813:ee77:95d0 on infra netif 3 (this BR routing-manager)
+otbr  | 00:01:00.035 [D] P-RadioSpinel-: Trying to get RCP time offset
+otbr  | 00:01:00.035 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:3, cmd:PROP_VALUE_GET, key:TIMESTAMP
+otbr  | 00:01:00.035 [D] P-RadioSpinel-: Wait response: tid=3 key=2050
+otbr  | 00:01:00.036 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:3, cmd:PROP_VALUE_IS, key:TIMESTAMP, timestamp:64294556
+otbr  | 00:01:00.140 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:01:00.140 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:4, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:00.140 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:01:00.147 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:4, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:00.147 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:81fb, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:01:00.147 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:00.147 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:01:00.690 [I] P-Netif-------: Message dropped by Thread
+otbr  | 00:01:13.772 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:01:13.772 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:5, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:13.772 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:01:13.777 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:5, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:13.777 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:3117, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:01:13.777 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:13.777 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:01:25.338 [I] P-Daemon------: Session socket is ready
+otbr  | 00:01:25.841 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:01:25.841 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:6, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:25.841 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:01:25.845 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:6, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:25.846 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:dc21, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:01:25.846 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:25.846 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:01:25.913 [D] Cli-----------: Input: [A
+otbr  | 00:01:25.913 [D] Cli-----------: Output: Error 35: InvalidCommand
+otbr  | 00:01:26.265 [I] BorderRouting-: Sent Neighbor Solicitation to fe80:0:0:0:6238:e0ff:fe12:9d41 - attempt:1/5
+otbr  | 00:01:26.266 [I] BorderRouting-: Received NA from router fe80:0:0:0:6238:e0ff:fe12:9d41
+otbr  | 00:01:27.701 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:0, cmd:PROP_VALUE_IS, key:STREAM_RAW, len:78, rssi:-33 ...
+otbr  | 00:01:27.701 [D] P-SpinelDrive-: ... noise:-128, flags:0x0000, channel:15, lqi:240, timestamp:0, rxerr:0
+otbr  | 00:01:27.701 [I] MeshForwarder-: Received IPv6 UDP msg, len:83, chksum:ce69, ecn:no, from:627b052166d42312, sec:no, prio:net, rss:-33.0, radio:15.4
+otbr  | 00:01:27.701 [I] MeshForwarder-:     src:[fe80:0:0:0:607b:521:66d4:2312]:19788
+otbr  | 00:01:27.701 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:01:27.701 [I] Mle-----------: Receive Announce (fe80:0:0:0:607b:521:66d4:2312)
+otbr  | 00:01:27.701 [I] Mle-----------: Send Announce on channel 20
+otbr  | 00:01:27.701 [I] Mle-----------: Send Announce on channel 20
+otbr  | 00:01:27.702 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:7, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:82, channel:20, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:27.702 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:01:27.707 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:7, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:27.707 [I] MeshForwarder-: Sent IPv6 UDP msg, len:83, chksum:cd8d, ecn:no, to:0xffff, sec:yes, prio:net, radio:all
+otbr  | 00:01:27.707 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:27.707 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:01:27.707 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:8, cmd:PROP_VALUE_SET, key:PHY_CHAN, channel:15
+otbr  | 00:01:27.707 [D] P-RadioSpinel-: Wait response: tid=8 key=33
+otbr  | 00:01:27.708 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:8, cmd:PROP_VALUE_IS, key:PHY_CHAN, channel:15
+otbr  | 00:01:27.709 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:9, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:87, channel:20, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:27.709 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:1, isARetx:0, skipAes:1, txDelay:0, txDelayBase:0
+otbr  | 00:01:27.709 [I] Mac-----------: Frame tx failed, error:Abort, len:85, seqnum:142, type:Data, src:f6721bac3ee6abf4, dst:627b052166d42312, sec:yes, ackreq:yes, radio:trel
+otbr  | 00:01:27.715 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:9, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:27.715 [I] MeshForwarder-: Sent IPv6 UDP msg, len:83, chksum:2462, ecn:no, to:627b052166d42312, sec:yes, prio:net, radio:all
+otbr  | 00:01:27.715 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:27.715 [I] MeshForwarder-:     dst:[fe80:0:0:0:607b:521:66d4:2312]:19788
+otbr  | 00:01:27.715 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:10, cmd:PROP_VALUE_SET, key:PHY_CHAN, channel:15
+otbr  | 00:01:27.715 [D] P-RadioSpinel-: Wait response: tid=10 key=33
+otbr  | 00:01:27.716 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:10, cmd:PROP_VALUE_IS, key:PHY_CHAN, channel:15
+otbr  | 00:01:29.773 [D] P-InfraNetif--: Failed to handle ICMPv6 message: Drop
+otbr  | 00:01:33.252 [I] BorderRouting-: Received RA from fe80:0:0:0:6238:e0ff:fe12:9d41 on infra netif 3 
+otbr  | 00:01:33.252 [I] BorderRouting-: - RA Header - flags - M:1 O:1 S:0
+otbr  | 00:01:33.252 [I] BorderRouting-: - RA Header - default route - lifetime:0
+otbr  | 00:01:33.252 [I] BorderRouting-: - PIO fd89:e85:a6f0:0::/64 (valid:5400, preferred:2700, flags - L:1 A:1 P:0)
+otbr  | 00:01:33.252 [I] BorderRouting-: - RIO fd89:e85:a6f0::/48 (lifetime:5400, prf:medium)
+otbr  | 00:01:33.252 [I] BorderRouting-: - RDNSS fd89:e85:a6f0:0:0:0:0:1 (lifetime:2700)
+otbr  | 00:01:37.546 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:01:37.546 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:11, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:37.546 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:01:37.551 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:11, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:37.551 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:f15d, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:01:37.551 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:37.551 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:01:49.313 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:01:49.313 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:12, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:01:49.313 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:01:49.318 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:12, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:01:49.318 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:11a4, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:01:49.318 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:01:49.318 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+otbr  | 00:02:00.036 [D] P-RadioSpinel-: Trying to get RCP time offset
+otbr  | 00:02:00.036 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:13, cmd:PROP_VALUE_GET, key:TIMESTAMP
+otbr  | 00:02:00.036 [D] P-RadioSpinel-: Wait response: tid=13 key=2050
+otbr  | 00:02:00.037 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:13, cmd:PROP_VALUE_IS, key:TIMESTAMP, timestamp:124296967
+otbr  | 00:02:00.330 [I] Mle-----------: Send Advertisement (ff02:0:0:0:0:0:0:1)
+otbr  | 00:02:00.331 [D] P-SpinelDrive-: Sent spinel frame, flg:0x2, iid:0, tid:14, cmd:PROP_VALUE_SET, key:STREAM_RAW, len:69, channel:15, maxbackoffs:4, maxretries:15 ...
+otbr  | 00:02:00.331 [D] P-SpinelDrive-: ... csmaCaEnabled:1, isHeaderUpdated:0, isARetx:0, skipAes:0, txDelay:0, txDelayBase:0
+otbr  | 00:02:00.335 [D] P-SpinelDrive-: Received spinel frame, flg:0x2, iid:0, tid:14, cmd:PROP_VALUE_IS, key:LAST_STATUS, status:OK
+otbr  | 00:02:00.335 [I] MeshForwarder-: Sent IPv6 UDP msg, len:90, chksum:7130, ecn:no, to:0xffff, sec:no, prio:net, radio:all
+otbr  | 00:02:00.335 [I] MeshForwarder-:     src:[fe80:0:0:0:f472:1bac:3ee6:abf4]:19788
+otbr  | 00:02:00.335 [I] MeshForwarder-:     dst:[ff02:0:0:0:0:0:0:1]:19788
+leader
+Done

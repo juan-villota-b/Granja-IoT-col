@@ -1,0 +1,18 @@
+services:
+  thingsboard:
+    image: thingsboard/tb-postgres
+    restart: always
+    ports:
+      - "8080:9090"
+      - "1883:1883"
+      - "5683:5683/udp"
+      - "7070:7070"
+    environment:
+      TB_QUEUE_TYPE: in-memory
+    volumes:
+      - tb-data:/data
+      - tb-logs:/var/log/thingsboard
+
+volumes:
+  tb-data:
+  tb-logs:

@@ -12,6 +12,7 @@
 | **RAM** | 3.7 GB |
 | **Almacenamiento** | 29 GB microSD (14 GB usados) |
 | **Usuario** | `finca` (uid=1000, grupos: sudo, docker, dialout, gpio, spi, i2c) |
+| **Passwd** | 12345 |
 | **Docker** | v29.4.2, Compose v5.1.3 |
 | **Python** | 3.13.5 |
 
