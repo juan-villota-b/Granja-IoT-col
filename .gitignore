@@ -5,7 +5,6 @@ build/
 *.bin
 *.elf
 **/sdkconfig.old
-**/sdkconfig
 Nodo-router-t-h/build/
 **/__pycache__/
 **/*.pyc
