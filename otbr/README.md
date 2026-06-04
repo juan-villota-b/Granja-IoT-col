@@ -49,6 +49,7 @@ ESP32-C6 ──POST CBOR──→ Bridge:5685 ──MQTT──→ TB Edge:1884 �
 
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
+| Granja Dashboard | 3000 | FastAPI + Leaflet + Chart.js — dashboard a medida |
 | OTBR | 8083 (web), 8081 (REST) | OpenThread Border Router — rutea IPv6 Thread ↔ WiFi |
 | ThingsBoard Edge | 8082 (web), 1884 (MQTT) | Plataforma IoT — dashboards, telemetría, RPC |
 | PostgreSQL | - (interno) | Base de datos de TB Edge |
@@ -58,6 +59,7 @@ ESP32-C6 ──POST CBOR──→ Bridge:5685 ──MQTT──→ TB Edge:1884 �
 
 | URL | Qué es |
 |-----|--------|
+| `http://localhost:3000` | Granja Dashboard — mapa con sensores, gráficas, control de válvula |
 | `http://localhost:8082` | ThingsBoard Edge — dashboards |
 | `http://localhost:8083` | OTBR Web GUI — monitoreo Thread |
 | `http://localhost:8081` | OTBR REST API |
@@ -67,9 +69,13 @@ ESP32-C6 ──POST CBOR──→ Bridge:5685 ──MQTT──→ TB Edge:1884 �
 ### 1. Levantar los servicios
 
 ```bash
-cd ~/Documentos/Semestre_VII/otbr
-docker compose up -d
+cd ~/Documentos/Semestre_VII/Granja-IOT/otbr
+./start.sh                 # todo con rebuild forzado
+./start.sh granja-dashboard  # solo el dashboard
 ```
+
+> **NUNCA usar `docker compose up` sin `--build`** — la imagen cacheada puede estar desactualizada y servir código viejo.
+> `./start.sh` siempre fuerza `--build` y además aplica automáticamente la regla ip6tables del paso 3.
 
 ### 2. Verificar que todo está corriendo
 
@@ -86,30 +92,43 @@ El UFW bloquea tráfico UDP entrante desde la red Thread. Agregar regla:
 docker exec otbr ip6tables -I INPUT 1 -p udp --dport 5685 -j ACCEPT
 ```
 
-> ⚠️ Esta regla se pierde si el contenedor OTBR se reinicia. Para hacerla permanente, agregar al `command` del servicio `otbr` en `docker-compose.yml`.
+> `./start.sh` aplica esta regla automáticamente después de levantar los servicios. No hace falta ejecutarla manualmente cada vez.
 
-### 4. Flashear el ESP32-C6 con el firmware SED (ultra bajo consumo)
+### 4. Flashear los ESP32-C6 con el firmware SED (ultra bajo consumo)
 
 ```bash
+# Nodo 1 — NODO-TH-AUTO (ZONA-A)
 cd ~/Documentos/Semestre_VII/Granja-IOT/nodo-coap-sed
 . ~/.espressif/v5.5.4/esp-idf/export.sh
-rm -f sdkconfig
-SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.sed" idf.py reconfigure
 idf.py build
 idf.py -p /dev/ttyACM1 flash
+
+# Nodo 2 — NODO-TH-AUTO-2 (ZONA-B)
+cd ~/Documentos/Semestre_VII/Granja-IOT/nodo-coap-sed-2
+. ~/.espressif/v5.5.4/esp-idf/export.sh
+idf.py build
+idf.py -p /dev/ttyACM2 flash
 ```
+
+> El `sdkconfig` tiene `CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y` habilitado para debugging. Para producción (SED real), usar `SDKCONFIG_DEFAULTS=sdkconfig.sed` que desactiva la consola y baja el CPU a 80MHz.
 
 ### 5. Monitorear
 
 ```bash
-# Logs del bridge (datos de telemetría)
+# Logs del bridge (datos de telemetría de todos los nodos)
 docker logs -f iot-bridge
 
 # Logs del OTBR (estado Thread)
 docker logs -f otbr
 
+# Logs del dashboard (API + WebSocket)
+docker logs -f granja-dashboard
+
 # Datos en ThingsBoard
-# Abrir http://localhost:8082 → Devices → Thread NODO-TH-AUTO → Latest Telemetry
+# Abrir http://localhost:8082 → Devices → NODO-TH-AUTO → Latest Telemetry
+
+# Dashboard a medida
+# Abrir http://localhost:3000 → login con credenciales TB → mapa + gráficas
 ```
 
 ## Comandos útiles OTBR
@@ -172,11 +191,53 @@ A2 61 76 01 # {"v":1} → abrir válvula
 A2 61 76 00 # {"v":0} → cerrar válvula
 ```
 
+## Granja Dashboard (FastAPI + Leaflet + Chart.js)
+
+Dashboard web a medida en **puerto 3000** con autenticación contra ThingsBoard.
+
+### Características
+
+- **Mapa Leaflet interactivo** con sensores Thread posicionados por atributos `lat`/`lng` o `pos_x`/`pos_y`
+- **Estado de la red** en la barra superior: total de nodos, activos, inactivos
+- **Conexiones visuales** entre Gateway y sensores (líneas punteadas violeta)
+- **Gráficas en tiempo real** (WebSocket): temperatura, humedad, batería
+- **SPA navigation**: Dashboard, Históricos (con exportación CSV), Válvula (RPC), Reglas
+- **Tema claro/oscuro** (toggle en sidebar, persistido en localStorage)
+- **El mapa recuerda zoom y posición** al recargar la página (localStorage `granja_map_state`)
+- **Custom select** con indicador de batería y status activo/inactivo por nodo
+
+### Backend
+
+- **Python FastAPI** con Jinja2 templates server-side
+- **Autenticación** vía session token httponly contra TB REST API
+- **WebSocket** con broadcast cada 5s para telemetría en vivo
+- **API REST**: `/api/devices`, `/api/telemetry/:id/history`, `/api/rpc/valve`
+
+### Acceso
+
+```
+http://localhost:3000  → login con credenciales de ThingsBoard
+http://localhost:3000/dashboard  → dashboard principal (requiere sesión)
+```
+
+---
+
 ## Directorios del proyecto
 
 ```
 otbr/
 ├── docker-compose.yml    # Servicios Docker
+├── start.sh              # Entrypoint: siempre --build + ip6tables
+├── granja-dashboard/     # FastAPI dashboard (puerto 3000)
+│   ├── Dockerfile
+│   ├── app/
+│   │   ├── static/js/    # map.js, realtime.js, historicos.js, valve.js, app.js
+│   │   ├── static/css/   # style.css (tema tierra + claro)
+│   │   ├── templates/    # base.html, dashboard.html, login.html
+│   │   ├── main.py       # API FastAPI
+│   │   ├── tb_client.py  # Cliente HTTP ThingsBoard
+│   │   └── config.py
+│   └── requirements.txt
 ├── bridge/               # Bridge Python (CoAP Server + MQTT)
 │   ├── main.py           # Servidor CoAP /readings + MQTT publisher
 │   ├── config.yaml       # Configuración MQTT, puertos
@@ -190,15 +251,17 @@ otbr/
 Granja-IOT/
 ├── Nodo-TH-auto/          # Firmware original (CoAP server) — OBSOLETO
 ├── nodo-copia-cliente/    # Firmware híbrido (FTD/SED) — EN DESUSO
-└── nodo-coap-sed/         # Firmware SED puro ultra bajo consumo — ACTIVO
+├── nodo-coap-sed/         # Firmware SED nodo 1 (NODO-TH-AUTO, ZONA-A)
+│   └── ...
+└── nodo-coap-sed-2/       # Firmware SED nodo 2 (NODO-TH-AUTO-2, ZONA-B)
     ├── main/
     │   ├── nodo_th_auto.c  # Punto de entrada SED
     │   ├── coap_client.c   # CoAP client + should_send() + CBOR encoder
-    │   ├── node_config.h   # Umbrales config, BRIDGE_IPV6
+    │   ├── node_config.h   # NODE_ID=NODO-TH-AUTO-2, ZONE_ID=ZONA-B
     │   └── ...
-    ├── sdkconfig.defaults  # Base
-    ├── sdkconfig.sed       # Override SED: MTD + 80MHz + tickless idle
-    └── README.md           # Documentación completa + estrategias de bajo consumo
+    ├── sdkconfig.defaults
+    ├── sdkconfig.sed
+    └── README.md
 ```
 
 ## Stack de protocolos

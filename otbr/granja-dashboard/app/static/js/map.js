@@ -42,14 +42,31 @@ function initMap(devices) {
   if (map) { map.remove(); map = null; markers = {}; }
   _nodeCoords = {};
 
+  // Guardar el estado previo en memoria antes de que las tiles lo pisen
+  var savedView = null;
+  try { savedView = localStorage.getItem('granja_map_state'); } catch(e) {}
+
   const nodes = devices.filter(d => !App.isGateway(d));
   nodes.forEach(d => { _nodeCoords[d.id] = getDeviceLatLng(d); });
 
   updateStatusBar(devices);
 
+  // Restaurar vista si habia estado guardado
+  var center = [CENTER_LAT, CENTER_LNG];
+  var zoom = INITIAL_ZOOM;
+  if (savedView) {
+    try {
+      var sv = JSON.parse(savedView);
+      if (typeof sv.lat === 'number' && typeof sv.lng === 'number' && typeof sv.zoom === 'number') {
+        center = [sv.lat, sv.lng];
+        zoom = sv.zoom;
+      }
+    } catch(e) {}
+  }
+
   map = L.map('dashboard-map', {
-    center: [CENTER_LAT, CENTER_LNG],
-    zoom: INITIAL_ZOOM,
+    center: center,
+    zoom: zoom,
     zoomControl: true,
     attributionControl: false,
   });
@@ -64,7 +81,20 @@ function initMap(devices) {
   devices.forEach(dev => addDeviceMarker(dev));
   drawConnections();
 
-  setTimeout(() => { try { map.invalidateSize(); } catch(e){ console.error('[map] invalidateSize:', e); } }, 400);
+  // Guardar cambios del usuario (solo despues de que todo este estable)
+  map.on('moveend', function() {
+    if (!map) return;
+    try {
+      var c = map.getCenter();
+      localStorage.setItem('granja_map_state', JSON.stringify({
+        lat: c.lat, lng: c.lng, zoom: map.getZoom()
+      }));
+    } catch(e) {}
+  });
+
+  setTimeout(function() {
+    try { map.invalidateSize(); } catch(e){}
+  }, 400);
 }
 
 function updateStatusBar(devices) {

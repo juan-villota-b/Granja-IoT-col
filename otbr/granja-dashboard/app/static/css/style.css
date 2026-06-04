@@ -60,6 +60,10 @@
   --text-muted:    #6b635a;
   --text-dim:      #9e9585;
 
+  --primary:       #65a30d;
+  --primary-hover: #4d7c0f;
+  --primary-soft:  rgba(101, 163, 13, 0.12);
+
   --shadow-sm:     0 1px 2px rgba(0,0,0,0.06);
   --shadow:        0 4px 12px rgba(0,0,0,0.08);
   --shadow-lg:     0 8px 30px rgba(0,0,0,0.12);
