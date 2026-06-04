@@ -1,171 +1,151 @@
-# Granja IoT
+# Granja IoT — Sistema de Agricultura de Precisión
 
-Sistema de agricultura de precisión con red **OpenThread**, nodos **ESP32-C6** y gateway **ThingsBoard Edge**.
+Red de sensores **OpenThread** con nodos **ESP32-C6**, gateway local **ThingsBoard Edge**, servidor central **ThingsBoard CE** y dashboard de monitoreo en tiempo real con **Leaflet + Chart.js**.
 
-## Arquitectura
+## Arquitectura general
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     THINGSBOARD CLOUD                              │
-│                  (sync Edge via MQTT / RPC)                        │
-└──────────────────────────┬──────────────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────────────┐
-│                     RASPBERRY PI 4                                  │
-│                                                                     │
-│  ┌─────────────────┐   ┌──────────────────┐   ┌─────────────────┐  │
-│  │  THINGSBOARD     │   │  BRIDGE (Python) │   │  OTBR            │  │
-│  │  EDGE 4.2.0      │◄──│                  │◄──│  Border Router   │  │
-│  │  (MQTT :1883)    │   │  main.py         │   │  (REST :8081)    │  │
-│  │  (CoAP :5683)    │   │                  │   │                  │  │
-│  │  (Web  :8082)    │   │  Descubre nodos  │   │  wpan0 ↔ wlan0   │  │
-│  │                  │   │  Lee CoAP/CBOR   │   │  UART → RCP      │  │
-│  │  PostgreSQL 16   │   │  Publica MQTT    │   │                  │  │
-│  └─────────────────┘   └──────────────────┘   └────────┬─────────┘  │
-└─────────────────────────────────────────────────────────┼────────────┘
-                                                          │ UART
-                                                          │ /dev/ttyACM0
-┌─────────────────────────────────────────────────────────▼────────────┐
-│                 RED THREAD (IEEE 802.15.4)                           │
-│                 PAN 0x1234 — Canal 15 — "IOT-LAB-NET"               │
-│                                                                     │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────────┐  │
-│  │ NODO-TH-01 │  │ NODO-TH-02 │  │ NODO-TH-03 │  │ NODO-TH-SED  │  │
-│  │ ZONA-A     │  │ ZONA-A     │  │ ZONA-B     │  │ ZONA-B (SED) │  │
-│  │ Router FTD │  │ Router FTD │  │ Router FTD │  │ Sleepy End   │  │
-│  │ ESP32-C6   │  │ ESP32-C6   │  │ ESP32-C6   │  │ ESP32-C6     │  │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └───────┬──────┘  │
-│        │               │               │                 │         │
-│        └───────┬───────┴───────┬───────┴─────────┬───────┘         │
-│                │               │                 │                 │
-│        ┌───────▼───────────────▼─────────────────▼──────┐          │
-│        │ NODO-VALVE-01 (ZONA-A, actuator de válvula)   │          │
-│        └────────────────────────────────────────────────┘          │
-└─────────────────────────────────────────────────────────────────────┘
+                            ┌──────────────────────┐
+                            │   THINGSBOARD CE     │
+                            │   Servidor central    │
+                            │   :8080 web, :7070 RPC│
+                            └──────────┬───────────┘
+                                       │ Cloud RPC
+                    ┌──────────────────┼──────────────────┐
+                    │                  │                  │
+           ┌────────▼────────┐  ┌─────▼───────┐  ┌──────▼──────┐
+           │  EDGE 1 (RPi)   │  │  EDGE 2     │  │  EDGE N     │
+           │  otbr + bridge  │  │  (embebido) │  │  (...)      │
+           │  TB Edge :8082  │  │             │  │             │
+           └────────┬────────┘  └─────────────┘  └─────────────┘
+                    │ Thread 802.15.4
+           ┌────────┴────────┐
+           │ ESP32-C6 NODOS  │
+           │ SED / Router    │
+           │ CoAP + CBOR     │
+           └─────────────────┘
 ```
 
-## Nodos Thread
+## Estructura del repositorio
 
-Cada nodo ESP32-C6 ejecuta un servidor **CoAP** con recursos CBOR:
-
-| Recurso | Método | Payload |
-|---------|--------|---------|
-| `/env/temp` | GET | `{"t": 25.3}` |
-| `/env/hum` | GET | `{"h": 60}` |
-| `/act/valve` | GET/PUT | `{"v": 0}` |
-| `/sys/health` | GET | `{"batt": 3100, "rssi": -65, "up": 12345}` |
-| `/sys/info` | GET | Identidad del nodo |
-| `/config/thresholds` | PUT | Config remota de umbrales |
-
-| Nodo | Tipo | Zona | Rol |
-|------|------|------|-----|
-| NODO-TH-01 | Temp/Hum | ZONA-A | Router FTD |
-| NODO-TH-02 | Temp/Hum | ZONA-A | Router FTD |
-| NODO-TH-03 | Temp/Hum | ZONA-B | Router FTD |
-| NODO-TH-SED-01 | Temp/Hum | ZONA-B | Sleepy End Device (bajo consumo) |
-| NODO-VALVE-01 | Válvula | ZONA-A | Router FTD + actuador |
+| Carpeta | Contenido |
+|---------|-----------|
+| [`nodo-coap-sed/`](nodo-coap-sed/README.md) | Firmware ESP32-C6 SED — nodo sensor TH ultra bajo consumo (~15 µA) |
+| [`nodo-coap-sed-2/`](nodo-coap-sed-2/README.md) | Segundo nodo SED (copia con configuración propia) |
+| [`otbr/`](otbr/README.md) | Stack Docker: OTBR + TB Edge + PostgreSQL + Bridge Python |
+| [`sistema-embebido/`](sistema-embebido/README.md) | Stack mínimo (4 servicios) para desplegar en dispositivo embebido |
+| [`thingsboard-docker/`](thingsboard-docker/README.md) | ThingsBoard CE + PostgreSQL (servidor central) |
+| [`Raspberry-pi-4/`](Raspberry-pi-4/README.md) | Especificaciones y config de la RPi gateway "finca" |
 
 ## Flujo de datos
 
-1. **Nodos** miden temperatura/humedad y exponen recursos CoAP en la red Thread
-2. **OTBR** (OpenThread Border Router) puentea Thread ↔ Wi-Fi, dando IPv6 a los nodos
-3. **Bridge** (Python) descubre nodos (simulados o reales vía OTBR REST API), consulta `/env/temp`, `/env/hum` y `/sys/health` por CoAP con payload CBOR, y publica la telemetría a ThingsBoard Edge via MQTT Gateway API
-4. **ThingsBoard Edge** almacena en PostgreSQL, sincroniza con ThingsBoard Cloud, y permite RPC (ej: `set_valve`) desde el dashboard hacia los nodos
-
-## Estructura del proyecto
-
 ```
-Granja-IOT/
-├── Nodo-router-t-h/           # Firmware ESP32-C6 (ESP-IDF)
-│   ├── main/
-│   │   ├── node_config.h      # ⭐ Config única del nodo (ID, red Thread, umbrales)
-│   │   ├── coap_server.c      # Servidor CoAP con recursos TH
-│   │   ├── thread_launch.c    # Inicialización OpenThread
-│   │   └── sensor.c           # Lectura de sensor (simulado)
-│   ├── sdkconfig              # Config de compilación
-│   └── sdkconfig.defaults     # Valores por defecto
-├── Raspberry-pi-4/
-│   ├── iot-gateway/           # Despliegue principal (Docker Compose)
-│   │   └── docker-compose.yml # OTBR + ThingsBoard Edge + PostgreSQL
-│   ├── bridge/                # Orquestador Python
-│   │   ├── main.py            # Loop: descubre → lee CoAP → publica MQTT
-│   │   ├── config.yaml        # Config: nodos simulados, MQTT credenciales
-│   │   ├── coap/              # Cliente CoAP (aiocoap)
-│   │   ├── mqtt/              # Publisher + Subscriber MQTT
-│   │   ├── discovery/         # Escáner de nodos (OTBR REST API)
-│   │   ├── downlink/          # Manejo de RPC desde TB Edge
-│   │   └── simulation/        # Simulador de 5 nodos CoAP
-│   ├── tb-edge/               # ThingsBoard Edge standalone
-│   ├── otbr/                  # OTBR standalone
-│   └── README.md
-└── README.md
+Sensor ESP32-C6
+  │  Lee temp/hum/batería/RSSI cada 30s
+  │  Aplica umbrales (0.5°C / 3%) → decide si enviar
+  ├──► POST CBOR /readings → Bridge CoAP :5685
+  │     └── Bridge decodifica CBOR → publica MQTT
+  │           └── TB Edge recibe → almacena en PostgreSQL
+  │                 └── Edge sincroniza con CE vía Cloud RPC
+  │                       └── Dashboard consulta CE :8080
+  │                             └── Leaflet mapa + Chart.js
+
+Comando válvula:
+  Dashboard → CE :8080 → Cloud RPC :7070 → Edge :8082
+    → MQTT v1/gateway/rpc → Bridge → encola comando
+      → Siguiente POST del nodo recibe piggyback → ejecuta
 ```
 
-## Seguridad y estado de implementación
+## Hardware
 
-### Unión inicial de nodos (commissioning)
+| Componente | Rol |
+|-----------|-----|
+| **ESP32-C6** | Nodo sensor con radio Thread 802.15.4 nativa |
+| **nRF52840** | RCP (Radio Co-Processor) para el OTBR |
+| **Raspberry Pi 4** | Gateway de campo: OTBR + TB Edge + Bridge |
+| **PC/Servidor** | ThingsBoard CE + Dashboard web |
+| **Sensores** | DHT22/BME280 (temp/humedad), relé + válvula solenoide |
 
-Actualmente cada nodo trae las credenciales de red Thread **quemadas en firme** en `node_config.h`:
+## Puertos de red
 
-| Parámetro | Ejemplo | Función |
-|-----------|---------|---------|
-| `THREAD_NETWORK_KEY` | `0011223344556677...` | Clave maestra AES-CCM de la red |
-| `THREAD_PANID` | `0x1234` | ID de la red personal |
-| `THREAD_PSKC` | `104810e2315100af...` | PSKc para commissioner externo |
+| Puerto | Servicio | Dónde corre |
+|--------|----------|-------------|
+| `:3000` | Granja Dashboard (FastAPI + Leaflet) | PC/Servidor |
+| `:8080` | ThingsBoard CE (web + API) | PC/Servidor |
+| `:7070` | ThingsBoard CE (Cloud RPC) | PC/Servidor |
+| `:8082` | ThingsBoard Edge (web) | RPi / Embebido |
+| `:1884` | ThingsBoard Edge (MQTT) | RPi / Embebido |
+| `:5684` | ThingsBoard Edge (CoAP) | RPi / Embebido |
+| `:8083` | OTBR Web GUI | RPi / Embebido |
+| `:8081` | OTBR REST API | RPi / Embebido |
+| `:5685` | Bridge CoAP Server | RPi / Embebido |
 
-Esto significa que **cualquiera con acceso al firmware** (código fuente o binario flasheado) tiene la clave de red y puede unirse. El flujo actual es:
+## Tecnologías
 
-1. Se edita `node_config.h` con los parámetros de la red
-2. Se compila y flashea el nodo
-3. Al encender, el nodo se une automáticamente con esas credenciales
+| Capa | Tecnología |
+|------|-----------|
+| Red IoT | Thread (IEEE 802.15.4) + 6LoWPAN + IPv6 |
+| Aplicación IoT | CoAP + CBOR (binario compacto) |
+| Gateway | OpenThread Border Router (Docker) |
+| Plataforma IoT | ThingsBoard CE + Edge 4.2.0 |
+| Bridge | Python (aiocoap + paho-mqtt) |
+| Dashboard | FastAPI + Leaflet + Chart.js (Vanilla JS SPA) |
+| Almacenamiento | PostgreSQL 16 |
+| Contenedores | Docker Compose |
 
-### Seguridad actual
+## Credenciales por defecto
 
-| Capa | Protección | Estado |
-|------|-----------|--------|
-| IEEE 802.15.4 (MAC) | AES-CCM cifra todas las tramas entre nodos | ✅ Implementado (nativo de Thread) |
-| Enlace Thread | Clave de red compartida, rotación automática de clave | ✅ Implementado |
-| CoAP | Sin cifrado — payload en texto plano o CBOR | ❌ Sin DTLS |
-| Commissioning | Sin autenticación de dispositivo individual | ❌ Sin PKG ni Joiners |
+| Sistema | URL | Usuario | Contraseña |
+|---------|-----|---------|------------|
+| ThingsBoard CE | `http://localhost:8080` | `tenant@thingsboard.org` | `tenant` |
+| ThingsBoard Edge | `http://localhost:8082` | `tenant@thingsboard.org` | `tenant` |
+| RPi "finca" | `ssh finca@10.182.112.114` | `finca` | `12345` |
 
-### Lo que falta implementar
+## Cómo empezar
 
-| Funcionalidad | Prioridad | Descripción |
-|---------------|-----------|-------------|
-| **Commissioning nativo Thread** | Alta | Usar el proceso estándar de Thread: un **Commissioner** (ejecutado en el OTBR) autentica cada **Joiner** antes de darle las credenciales de red. Así un nodo nuevo solo puede unirse si un administrador lo autoriza explícitamente. |
-| **Autenticación por dispositivo** | Alta | Asignar a cada nodo un **Joiner ID** único (derivado de su EUI-64). El Commissioner valida contra una lista de dispositivos autorizados antes de compartir la network key. |
-| **DTLS (CoAPS)** | Alta | Implementar **CoAP sobre DTLS** con PSK para que la telemetría y los comandos viajen cifrados entre el nodo y el bridge, y no puedan ser interceptados en la red local. |
-| **Flash Encryption** | Media | Activar **Flash Encryption** en el ESP32-C6 para que la network key y otros secretos no se puedan leer extrayendo el binario del chip. |
-| **Secure Boot** | Media | Activar **Secure Boot V2** para garantizar que solo firmware firmado ejecute en los nodos, evitando que un atacante flashee un binario modificado. |
-| **NVS Encryption** | Media | Cifrar la partición NVS donde se almacenan credenciales y configuración persistente. |
-| **Rotación periódica de network key** | Baja | Implementar cambio automático de la clave de red Thread sin interrumpir la comunicación, limitando el daño si una clave se expone. |
-| **Whitelist MAC en OTBR** | Baja | Configurar el OTBR para solo aceptar dispositivos con EUI-64 conocido, añadiendo una capa extra de control de acceso. |
+### 1. Levantar ThingsBoard CE (servidor central)
 
-### Resumen de riesgos actuales
-
-En el estado actual, cualquiera que obtenga el firmware (por acceso al repo, al binario flasheado, o a un cable UART) puede:
-- Extraer la **network key** y unirse a la red Thread
-- Enviar comandos CoAP a cualquier nodo (no hay autenticación ni cifrado en la aplicación)
-- Flashear su propio nodo malicioso en la red
-
-Para un MVP/Laboratorio esto es aceptable, pero para un despliegue productivo en campo se deben implementar las mejoras marcadas como **prioridad alta** antes de conectar nodos reales en un entorno no controlado.
-
-## Comandos rápidos
-
-### Nodo firmware
 ```bash
-cd Nodo-router-t-h
-idf.py build flash monitor
-```
-
-### Gateway (Raspberry Pi)
-```bash
-cd Raspberry-pi-4/iot-gateway
+cd thingsboard-docker
 docker compose up -d
+# Esperar 1-2 min a que inicialice
 ```
 
-### Bridge (simulación sin hardware)
+### 2. Levantar el stack de campo (RPi o embebido)
+
 ```bash
-cd Raspberry-pi-4/bridge
-python3 main.py -c config.yaml
+# Si es la RPi existente:
+cd otbr
+docker compose up -d
+
+# Si es un nuevo dispositivo embebido:
+# Copiar sistema-embebido/ al dispositivo y ejecutar:
+cd ~/sistema-embebido
+sudo docker compose up -d
+```
+
+### 3. Conectar Edge con CE
+
+- En ThingsBoard CE: **Edge Management → Edges → +** → crear Edge
+- Copiar `CLOUD_ROUTING_KEY` y `CLOUD_ROUTING_SECRET`
+- Pegarlos en el `docker-compose.yml` del Edge
+- `CLOUD_RPC_HOST` debe apuntar a la IP del servidor CE
+
+### 4. Abrir el dashboard
+
+```bash
+cd otbr/granja-dashboard
+docker compose up -d -f  # o reconstruir si cambió
+# Abrir http://localhost:3000
+```
+
+### 5. Flashear nodos ESP32-C6
+
+```bash
+cd nodo-coap-sed
+. ~/.espressif/v5.5.4/esp-idf/export.sh
+rm -f sdkconfig
+SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.sed" idf.py reconfigure
+idf.py build
+idf.py -p /dev/ttyACM1 flash
 ```
