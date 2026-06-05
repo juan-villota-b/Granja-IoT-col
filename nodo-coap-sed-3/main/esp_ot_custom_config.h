@@ -1,0 +1,3 @@
+#pragma once
+
+#define OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE 1

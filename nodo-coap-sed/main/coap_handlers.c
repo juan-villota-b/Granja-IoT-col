@@ -10,6 +10,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_openthread.h"
+#include "openthread/platform/radio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -74,9 +75,24 @@ static size_t encode_info_cbor(uint8_t *out, size_t max_len)
         NODE_ID, ZONE_ID, NODE_TYPE, LAT, LNG, FW_VERSION);
 }
 
+static int8_t get_rssi(void)
+{
+    otInstance *ot = esp_openthread_get_instance();
+    if (!ot) return -65;
+
+    int8_t rssi;
+    if (otThreadGetParentLastRssi(ot, &rssi) == OT_ERROR_NONE && rssi < 0 && rssi > -128) {
+        return rssi;
+    }
+    if (otThreadGetParentAverageRssi(ot, &rssi) == OT_ERROR_NONE && rssi < 0 && rssi > -128) {
+        return rssi;
+    }
+    return -65;
+}
+
 static size_t encode_health_cbor(uint8_t *out, size_t max_len)
 {
-    int8_t  rssi_sim = -65;
+    int8_t  rssi_sim = get_rssi();
     uint16_t batt_sim = 3100;
     uint32_t uptime_s = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
     return snprintf((char *)out, max_len,

@@ -1,11 +1,11 @@
 #pragma once
 
-#define NODE_ID             "NODO-TH-AUTO"
-#define ZONE_ID             "ZONA-A"
+#define NODE_ID             "NODO-TH-AUTO-3"
+#define ZONE_ID             "ZONA-C"
 #define NODE_TYPE           "th_auto"
-#define LAT                 5.031303f
-#define LNG                 -75.468862f
-#define FW_VERSION          "1.0.0"
+#define LAT                 5.029139f
+#define LNG                 -75.472778f
+#define FW_VERSION          "3.0.0"
 
 #define TEMP_BASELINE       25.0f
 #define HUM_BASELINE        60

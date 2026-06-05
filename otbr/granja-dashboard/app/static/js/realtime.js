@@ -87,6 +87,9 @@ function connectWS(deviceId) {
         if (data.rssi !== undefined) dev.telemetry.rssi = data.rssi;
         if (data.uptime !== undefined) dev.telemetry.uptime = data.uptime;
         if (data._ts !== undefined) dev.telemetry._ts = data._ts;
+        if (!dev.attributes) dev.attributes = {};
+        if (data._active !== undefined) dev.attributes.active = data._active;
+        if (data._lastActivityTime !== undefined) dev.attributes.lastActivityTime = data._lastActivityTime;
         if (App.state.activeNodeId === deviceId) {
           App.renderNodeInfo(dev);
         }

@@ -230,7 +230,15 @@ async def poll_and_broadcast():
                     telemetry = await tb.get_latest_telemetry(tb_token, dev_id, "temperature,humidity,battery,rssi,uptime")
                     if not telemetry:
                         continue
-                    msg = json.dumps({"device_id": dev_id, **telemetry})
+                    attrs = await tb.get_device_attributes(tb_token, dev_id)
+                    active_val = attrs.get("active")
+                    last_activity = attrs.get("lastActivityTime")
+                    extras = {}
+                    if active_val is not None:
+                        extras["_active"] = bool(active_val) if not isinstance(active_val, bool) else active_val
+                    if last_activity is not None:
+                        extras["_lastActivityTime"] = last_activity
+                    msg = json.dumps({"device_id": dev_id, **telemetry, **extras})
                     for ws in connected_websockets[dev_id][:]:
                         try:
                             await ws.send_text(msg)

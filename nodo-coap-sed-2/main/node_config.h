@@ -9,9 +9,9 @@
 
 #define TEMP_BASELINE       25.0f
 #define HUM_BASELINE        60
-#define SAMPLE_INTERVAL_MS  30000
+#define SAMPLE_INTERVAL_MS  5000
 
-#define HEARTBEAT_INTERVAL_S    300    // s — keepalive máximo sin enviar
+#define HEARTBEAT_INTERVAL_S    30    // s — keepalive máximo sin enviar
 #define TEMP_THRESHOLD_C        0.5f   // °C — cambio mínimo para notificar
 #define HUM_THRESHOLD_PCT       3      // %  — cambio mínimo para notificar
 

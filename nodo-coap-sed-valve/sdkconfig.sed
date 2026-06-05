@@ -1,0 +1,26 @@
+#
+# OpenThread SED (Sleepy End Device) — ultra bajo consumo
+# Usar: SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.sed" idf.py reconfigure
+#
+
+# ── Thread: SED puro, no FTD ──
+CONFIG_OPENTHREAD_FTD=n
+CONFIG_OPENTHREAD_MTD=y
+CONFIG_OPENTHREAD_CHILD_TIMEOUT=180
+
+# ── CPU frequency: 80 MHz (suficiente para CoAP, ahorra ~50%) ──
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y
+# CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160 is not set
+
+# ── Energy management ──
+CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=y
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+CONFIG_FREERTOS_TICKLESS_IDLE_DYNAMIC=y
+
+# ── Deshabilitar periféricos no usados ──
+CONFIG_ESP_CONSOLE_NONE=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+# CONFIG_ESP_CONSOLE_UART_DEFAULT is not set
+# CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG is not set
+# CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG is not set
+# CONFIG_ESP_WIFI_ENABLED is not set

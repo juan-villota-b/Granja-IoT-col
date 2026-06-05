@@ -72,7 +72,8 @@ function initMap(devices) {
   });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxNativeZoom: 19,
+    maxZoom: 20,
   }).addTo(map);
 
   gatewayGroup = L.layerGroup().addTo(map);
@@ -80,21 +81,31 @@ function initMap(devices) {
 
   devices.forEach(dev => addDeviceMarker(dev));
   drawConnections();
+  updateZoomVisibility();
+
+  map.on('zoomend', updateZoomVisibility);
 
   // Guardar cambios del usuario (solo despues de que todo este estable)
+  var saveTimer = null;
   map.on('moveend', function() {
     if (!map) return;
-    try {
-      var c = map.getCenter();
-      localStorage.setItem('granja_map_state', JSON.stringify({
-        lat: c.lat, lng: c.lng, zoom: map.getZoom()
-      }));
-    } catch(e) {}
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function() {
+      try {
+        var c = map.getCenter();
+        localStorage.setItem('granja_map_state', JSON.stringify({
+          lat: c.lat, lng: c.lng, zoom: map.getZoom()
+        }));
+      } catch(e) {}
+    }, 300);
   });
 
   setTimeout(function() {
     try { map.invalidateSize(); } catch(e){}
   }, 400);
+
+  if (window._mapRefreshInterval) clearInterval(window._mapRefreshInterval);
+  window._mapRefreshInterval = setInterval(refreshAllMarkers, 10000);
 }
 
 function updateStatusBar(devices) {
@@ -334,7 +345,7 @@ function updateMarkerTelemetry(deviceId, telemetry) {
 
   const ts = parseInt(tel._ts);
   const lastSeen = !isNaN(ts) && ts > 0 ? ts : Date.now();
-  const active = (Date.now() - lastSeen) < 300000;
+  const active = (Date.now() - lastSeen) < 40000;
 
   if (active !== marker._active) {
     marker._active = active;
@@ -373,4 +384,28 @@ function updateMarkerTelemetry(deviceId, telemetry) {
   const tooltip = marker.getTooltip();
   if (tooltip) tooltip.setContent(`${App.esc(marker._name)}`);
   drawConnections();
+}
+
+function refreshAllMarkers() {
+  if (!App || !App.state || !App.state.devices) return;
+  App.state.devices.forEach(dev => {
+    const marker = markers[dev.id];
+    if (!marker || marker.isGateway) return;
+    const active = App.isDeviceActive(dev);
+    if (active !== marker._active) {
+      marker._active = active;
+      const iconColor = active ? (marker._isValve ? '#ef4444' : '#22c55e') : '#6b7280';
+      const opacity = active ? '1' : '0.7';
+      const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
+      const size = 18;
+      marker.setIcon(L.divIcon({
+        className: '',
+        html: `<div style="width:${size}px;height:${size}px;background:${iconColor};border:2.5px solid ${active ? 'white' : '#9ca3af'};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      }));
+    }
+  });
+  drawConnections();
+  updateStatusBar(App.state.devices);
 }

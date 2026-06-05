@@ -194,13 +194,13 @@ const App = (() => {
   }
 
   function isDeviceActive(dev) {
+    const attrs = dev.attributes || {};
+    if (attrs.active === false || attrs.active === 'false') return false;
     const tel = dev.telemetry || {};
     const ts = parseInt(tel._ts);
-    if (!isNaN(ts) && ts > 0) return (Date.now() - ts) < 300000;
-    const attrs = dev.attributes || {};
+    if (!isNaN(ts) && ts > 0) return (Date.now() - ts) < 40000;
     const lastActivity = parseInt(attrs.lastActivityTime);
-    if (!isNaN(lastActivity) && lastActivity > 0) return (Date.now() - lastActivity) < 300000;
-    if (tel.uptime !== undefined && parseInt(tel.uptime) > 0) return true;
+    if (!isNaN(lastActivity) && lastActivity > 0) return (Date.now() - lastActivity) < 40000;
     return false;
   }
 

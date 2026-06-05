@@ -228,7 +228,7 @@ esp_err_t coap_send_telemetry(float temp, uint8_t hum)
     if (!sess) { ESP_LOGE(TAG, "client_session"); coap_free_context(ctx); return ESP_FAIL; }
 
     /* ── Construir PDU ── */
-    coap_pdu_t *pdu = coap_pdu_init(COAP_MESSAGE_NON, COAP_REQUEST_POST,
+    coap_pdu_t *pdu = coap_pdu_init(COAP_MESSAGE_CON, COAP_REQUEST_POST,
                                      ++_g_msg_id, coap_session_max_pdu_size(sess));
     if (!pdu) { coap_session_release(sess); coap_free_context(ctx); return ESP_FAIL; }
 
@@ -248,12 +248,30 @@ esp_err_t coap_send_telemetry(float temp, uint8_t hum)
     g_have_response = false;
     coap_send(sess, pdu);
 
-    ESP_LOGI(TAG, "POST NON /readings → %s (%d B) t=%.2f h=%u",
-             BRIDGE_IPV6, (int)payload_len, (double)temp, hum);
+    if (!_g_registered) {
+        ESP_LOGI(TAG, "POST /readings → %s (%d B + attrs) t=%.2f h=%u",
+                 BRIDGE_IPV6, (int)payload_len, (double)temp, hum);
+    } else {
+        ESP_LOGI(TAG, "POST /readings → %s (%d B) t=%.2f h=%u",
+                 BRIDGE_IPV6, (int)payload_len, (double)temp, hum);
+    }
 
-    /* ── NON: flush + dormir (sin esperar ACK) ── */
-    coap_io_process(ctx, 50);
-    _g_registered = false;  // siempre envía attrs con NON
+    /* ── Esperar respuesta ── */
+    TickType_t start = xTaskGetTickCount();
+    while (!g_have_response &&
+           (xTaskGetTickCount() - start) < pdMS_TO_TICKS(COAP_TIMEOUT_MS)) {
+        coap_io_process(ctx, 200);
+    }
+
+    if (g_have_response) {
+        if (!_g_registered) {
+            _g_registered = true;
+            ESP_LOGI(TAG, "REGISTRO OK — BRIDGE CONFIRMÓ ATRIBUTOS");
+        }
+        if (g_response_len > 0) {
+            _parse_downlink();
+        }
+    }
 
     coap_session_release(sess);
     coap_free_context(ctx);

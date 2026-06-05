@@ -59,7 +59,8 @@ ESP32-C6 ──POST CBOR──→ Bridge:5685 ──MQTT──→ TB Edge:1884 �
 
 | URL | Qué es |
 |-----|--------|
-| `http://localhost:3000` | Granja Dashboard — mapa con sensores, gráficas, control de válvula |
+| `https://<nombre>.tailXXXXX.ts.net` | **Dashboard público** (Tailscale Funnel) — accesible desde internet |
+| `http://localhost:3000` | Granja Dashboard — mapa con sensores, gráficas, control de válvula (local) |
 | `http://localhost:8082` | ThingsBoard Edge — dashboards |
 | `http://localhost:8083` | OTBR Web GUI — monitoreo Thread |
 | `http://localhost:8081` | OTBR REST API |
@@ -218,6 +219,112 @@ Dashboard web a medida en **puerto 3000** con autenticación contra ThingsBoard.
 ```
 http://localhost:3000  → login con credenciales de ThingsBoard
 http://localhost:3000/dashboard  → dashboard principal (requiere sesión)
+```
+
+## Acceso público por internet (Tailscale Funnel)
+
+Expone el dashboard en una URL pública permanente usando **Tailscale Funnel** — gratis, con HTTPS automático y cifrado WireGuard extremo a extremo.
+
+### Prerequisitos
+
+- Dashboard funcionando en `http://localhost:3000`
+- Cuenta en [login.tailscale.com](https://login.tailscale.com) (Google/GitHub)
+
+### Instalación paso a paso
+
+**1. Instalar Tailscale**
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+**2. Autenticar**
+
+```bash
+sudo tailscale up
+```
+
+Se abre el navegador — inicia sesión con Google o GitHub.
+
+**3. Exponer el dashboard al internet**
+
+```bash
+sudo tailscale serve --bg http://localhost:3000
+sudo tailscale funnel --bg 3000
+```
+
+**4. URL pública**
+
+Revisar con:
+
+```bash
+sudo tailscale funnel status
+```
+```
+# Funnel on:
+#     - https://NOMBRE.tailXXXXX.ts.net
+```
+
+Compartir ese link — cualquier persona con él puede ver el dashboard.
+
+### Cambiar el nombre de la máquina (opcional)
+
+```bash
+# Cambiar desde la terminal
+sudo tailscale up --hostname=granja-iot
+
+# O desde login.tailscale.com → Machines → {nombre} → Rename
+```
+
+Luego reactivar serve + funnel:
+
+```bash
+sudo tailscale funnel --https=443 off   # limpiar viejo
+sudo tailscale serve --https=443 off
+sudo tailscale serve --bg http://localhost:3000
+sudo tailscale funnel --bg 3000
+```
+
+### Auto-start al reiniciar el PC
+
+Tailscaled ya viene configurado para arrancar con systemd. Para que el Funnel también se reactive automáticamente:
+
+```bash
+# Crear el script
+sudo tee /usr/local/bin/tailscale-funnel-start.sh << 'EOF'
+#!/bin/bash
+for i in $(seq 1 30); do
+    if tailscale status 2>/dev/null | grep -q "active\|idle"; then
+        break
+    fi
+    sleep 2
+done
+tailscale serve --bg http://localhost:3000 2>/dev/null
+tailscale funnel --bg 3000 2>/dev/null
+EOF
+
+sudo chmod +x /usr/local/bin/tailscale-funnel-start.sh
+
+# Crear el servicio systemd
+sudo tee /etc/systemd/system/tailscale-funnel.service << 'EOF'
+[Unit]
+Description=Tailscale Funnel para Granja Dashboard
+After=network-online.target tailscaled.service docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tailscale-funnel-start.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Activar
+sudo systemctl daemon-reload
+sudo systemctl enable tailscale-funnel.service
+sudo systemctl start tailscale-funnel.service
 ```
 
 ---
