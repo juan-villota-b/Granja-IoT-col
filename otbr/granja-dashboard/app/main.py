@@ -97,7 +97,7 @@ async def api_logout(request: Request):
 # ─── Devices API ────────────────────────────────────────────────────
 
 @app.get("/api/devices")
-async def api_devices(request: Request, gateway: str = "Gateway-asus"):
+async def api_devices(request: Request, gateway: str = "IoT-Gateway"):
     session_token = request.cookies.get("session_token")
     if not session_token:
         raise HTTPException(status_code=401, detail="No autenticado")

@@ -5,6 +5,10 @@
 #define NODE_TYPE "sensor_sed"
 #define FW_VERSION "5.2.0"
 
+#define ACCESS_TOKEN "1"
+#define TELEMETRY_KEY 'l'
+#define TELEMETRY_FMT 'U'
+
 #define TEMP_THRESHOLD_C_DEFAULT 0.5f
 #define HEARTBEAT_S_DEFAULT 300
 #define SAMPLE_INTERVAL_MS 30000

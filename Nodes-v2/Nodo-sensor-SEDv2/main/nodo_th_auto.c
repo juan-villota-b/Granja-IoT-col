@@ -106,7 +106,7 @@ void app_main(void)
     mode = otThreadGetLinkMode(ot);
     ESP_LOGI(TAG, "SED mode: rx=%d devtype=%d netdata=%d",
              mode.mRxOnWhenIdle, mode.mDeviceType, mode.mNetworkData);
-    otLinkSetPollPeriod(ot, 30000);
+    otLinkSetPollPeriod(ot, 15000);
     esp_openthread_lock_release();
 
     sensor_temp_t lectura = sensor_dht22_leer();
@@ -114,30 +114,12 @@ void app_main(void)
 
     ESP_LOGI(TAG, "1er push (registro + telemetria)");
     push_telemetry(&lectura, 0, uptime, true);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    float last_temp = lectura.temperatura_c;
-    uint32_t last_push_tick = uptime;
+    vTaskDelay(pdMS_TO_TICKS(15000));
 
     while (1) {
         lectura = sensor_dht22_leer();
         uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
-
-        float delta = fabsf(lectura.temperatura_c - last_temp);
-        bool debe_push = false;
-
-        if (delta > g_config.temp_threshold_c)
-            debe_push = true;
-        else if ((uptime - last_push_tick) >= g_config.heartbeat_s)
-            debe_push = true;
-
-        if (debe_push) {
-            push_telemetry(&lectura, 0, uptime, false);
-            last_temp = lectura.temperatura_c;
-            last_push_tick = uptime;
-        }
-
-        ESP_LOGD(TAG, "⏰ Idle %lu ms...", (unsigned long)g_config.sample_interval_ms);
-        vTaskDelay(pdMS_TO_TICKS(g_config.sample_interval_ms));
+        push_telemetry(&lectura, 0, uptime, false);
+        vTaskDelay(pdMS_TO_TICKS(15000));
     }
 }

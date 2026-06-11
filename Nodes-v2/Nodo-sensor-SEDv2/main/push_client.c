@@ -32,17 +32,26 @@ static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, 
     size_t vl = strlen(FW_VERSION);
     out[p++] = (uint8_t)(0x60 | vl);
     memcpy(out + p, FW_VERSION, vl); p += vl;
-    out[p++] = 0x61; out[p++] = 't';
-    out[p++] = 0xF9;
-    uint32_t x = f32_to_u32(t->temperatura_c);
-    uint16_t sign = (x >> 16) & 0x8000;
-    int16_t exp = ((x >> 23) & 0xFF) - 127 + 15;
-    uint16_t mant = (x >> 13) & 0x3FF;
-    uint16_t tv;
-    if (exp <= 0) tv = (uint16_t)sign;
-    else if (exp >= 31) tv = (uint16_t)(sign | 0x7C00);
-    else tv = sign | ((uint16_t)exp << 10) | mant;
-    out[p++] = (uint8_t)(tv >> 8); out[p++] = (uint8_t)(tv & 0xFF);
+    out[p++] = 0x61; out[p++] = TELEMETRY_KEY;
+    if (TELEMETRY_FMT == 'f') {
+        out[p++] = 0xF9;
+        uint32_t x = f32_to_u32(t->temperatura_c);
+        uint16_t sign = (x >> 16) & 0x8000;
+        int16_t exp = ((x >> 23) & 0xFF) - 127 + 15;
+        uint16_t mant = (x >> 13) & 0x3FF;
+        uint16_t tv;
+        if (exp <= 0) tv = (uint16_t)sign;
+        else if (exp >= 31) tv = (uint16_t)(sign | 0x7C00);
+        else tv = sign | ((uint16_t)exp << 10) | mant;
+        out[p++] = (uint8_t)(tv >> 8); out[p++] = (uint8_t)(tv & 0xFF);
+    } else if (TELEMETRY_FMT == 'u') {
+        out[p++] = 0x18;
+        out[p++] = t->humedad_pct;
+    } else if (TELEMETRY_FMT == 'U') {
+        out[p++] = 0x19;
+        out[p++] = (uint8_t)(t->luz_lux >> 8);
+        out[p++] = (uint8_t)(t->luz_lux & 0xFF);
+    }
     out[p++] = 0x61; out[p++] = 'r';
     out[p++] = 0x38;
     out[p++] = (uint8_t)((-(int16_t)rssi) - 1);
@@ -63,17 +72,26 @@ static size_t encode_cbor_push(uint8_t out[48], sensor_temp_t *t, int8_t rssi, u
     size_t nl = strlen(NODE_ID);
     out[p++] = (uint8_t)(0x60 | nl);
     memcpy(out + p, NODE_ID, nl); p += nl;
-    out[p++] = 0x61; out[p++] = 't';
-    out[p++] = 0xF9;
-    uint32_t x = f32_to_u32(t->temperatura_c);
-    uint16_t sign = (x >> 16) & 0x8000;
-    int16_t exp = ((x >> 23) & 0xFF) - 127 + 15;
-    uint16_t mant = (x >> 13) & 0x3FF;
-    uint16_t tv;
-    if (exp <= 0) tv = (uint16_t)sign;
-    else if (exp >= 31) tv = (uint16_t)(sign | 0x7C00);
-    else tv = sign | ((uint16_t)exp << 10) | mant;
-    out[p++] = (uint8_t)(tv >> 8); out[p++] = (uint8_t)(tv & 0xFF);
+    out[p++] = 0x61; out[p++] = TELEMETRY_KEY;
+    if (TELEMETRY_FMT == 'f') {
+        out[p++] = 0xF9;
+        uint32_t x = f32_to_u32(t->temperatura_c);
+        uint16_t sign = (x >> 16) & 0x8000;
+        int16_t exp = ((x >> 23) & 0xFF) - 127 + 15;
+        uint16_t mant = (x >> 13) & 0x3FF;
+        uint16_t tv;
+        if (exp <= 0) tv = (uint16_t)sign;
+        else if (exp >= 31) tv = (uint16_t)(sign | 0x7C00);
+        else tv = sign | ((uint16_t)exp << 10) | mant;
+        out[p++] = (uint8_t)(tv >> 8); out[p++] = (uint8_t)(tv & 0xFF);
+    } else if (TELEMETRY_FMT == 'u') {
+        out[p++] = 0x18;
+        out[p++] = t->humedad_pct;
+    } else if (TELEMETRY_FMT == 'U') {
+        out[p++] = 0x19;
+        out[p++] = (uint8_t)(t->luz_lux >> 8);
+        out[p++] = (uint8_t)(t->luz_lux & 0xFF);
+    }
     out[p++] = 0x61; out[p++] = 'r';
     out[p++] = 0x38;
     out[p++] = (uint8_t)((-(int16_t)rssi) - 1);

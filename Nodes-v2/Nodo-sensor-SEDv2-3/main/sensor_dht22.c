@@ -5,6 +5,7 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <math.h>
 
 #include "node_config.h"
 
@@ -65,7 +66,7 @@ void sensor_dht22_init(void)
 
 sensor_temp_t sensor_dht22_leer(void)
 {
-    sensor_temp_t lectura = { .temperatura_c = TEMP_BASELINE };
+    sensor_temp_t lectura = { .temperatura_c = TEMP_BASELINE, .humedad_pct = 55, .luz_lux = 500 };
 
     if (g_gpio < 0) return lectura;
 
@@ -91,6 +92,8 @@ sensor_temp_t sensor_dht22_leer(void)
     /* ── Checksum ── */
     if ((uint8_t)(datos[0] + datos[1] + datos[2] + datos[3]) != datos[4]) {
         ESP_LOGW(TAG, "Checksum DHT22 fallo");
+        lectura.humedad_pct = 55;
+        lectura.luz_lux = 500;
         return lectura;
     }
 
@@ -100,8 +103,12 @@ sensor_temp_t sensor_dht22_leer(void)
     int16_t temp_raw = ((int16_t)(datos[2] & 0x7F)) << 8 | datos[3];
     if (datos[2] & 0x80) temp_raw = -temp_raw;
     lectura.temperatura_c = (float)temp_raw / 10.0f;
+    lectura.humedad_pct = (uint8_t)datos[0];
 
-    ESP_LOGD(TAG, "DHT22: T=%.1f°C hum=%d.%d%%",
-             (double)lectura.temperatura_c, datos[0], datos[1]);
+    float t_s = (float)(xTaskGetTickCount() * portTICK_PERIOD_MS) / 1000.0f;
+    lectura.luz_lux = 500 + (uint16_t)(300.0f * sinf(2.0f * (float)M_PI * t_s / 3600.0f));
+
+    ESP_LOGD(TAG, "DHT22: T=%.1fC hum=%d%% lux=%d",
+             (double)lectura.temperatura_c, lectura.humedad_pct, lectura.luz_lux);
     return lectura;
 }
