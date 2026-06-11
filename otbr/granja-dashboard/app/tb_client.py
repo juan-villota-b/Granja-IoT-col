@@ -153,7 +153,7 @@ class TBClient:
     async def send_rpc(self, token: str, device_id: str, method: str, params: dict) -> bool:
         headers = await self.get_headers(token)
         resp = await self._client.post(
-            f"{self.base_url}/api/rpc",
+            f"{self.base_url}/api/plugins/rpc/oneway/{device_id}",
             json={"method": method, "params": params},
             headers=headers,
         )

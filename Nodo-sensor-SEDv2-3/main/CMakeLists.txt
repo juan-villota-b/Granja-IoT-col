@@ -1,0 +1,18 @@
+idf_component_register(
+    SRCS
+        nodo_th_auto.c
+        push_client.c
+        config.c
+        sensor_temp.c
+        sensor_dht22.c
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        esp_event
+        esp_netif
+        nvs_flash
+        openthread
+        vfs
+        coap
+        driver
+)

@@ -654,15 +654,15 @@ input, select { font-family: inherit; font-size: inherit; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
-  height: 144px;
+  padding: 10px 12px 6px;
+  height: 180px;
   flex-shrink: 0;
 }
 
 .chart-container h4 {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -671,7 +671,7 @@ input, select { font-family: inherit; font-size: inherit; }
 
 .chart-container canvas {
   width: 100% !important;
-  height: 110px !important;
+  height: 148px !important;
 }
 
 /* ── Placeholder / Loading ── */

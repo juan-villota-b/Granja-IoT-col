@@ -11,8 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 15683 15684 15685 15686 15687
-
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 

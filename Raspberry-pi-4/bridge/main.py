@@ -1,92 +1,167 @@
 #!/usr/bin/env python3
-import argparse,asyncio,logging,time,yaml,cbor2,sys
+import argparse,asyncio,logging,time,yaml,cbor2,json,sys
 from mqtt.publisher import MQTTPublisher
 from mqtt.subscriber import MQTTSubscriber
-from downlink.handler import DownlinkHandler
-logging.basicConfig(level=logging.INFO,format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-log=logging.getLogger("bridge")
 
-class CoAPReader:
-    def __init__(self):self._ctx=None
-    async def ensure(self):
-        if self._ctx is None:
-            import aiocoap;self._ctx=await aiocoap.Context.create_client_context()
-            log.info("CoAP context created")
-    async def get_cbor(self,host,port,path):
-        import aiocoap;await self.ensure()
-        uri=f"coap://[{host}]:{port}{path}"
-        try:
-            r=await asyncio.wait_for(self._ctx.request(aiocoap.Message(code=aiocoap.GET,uri=uri)).response,timeout=5)
-            if r.code.is_successful() and r.payload:return cbor2.loads(r.payload)
-        except:pass
-        return None
-    async def put_cbor(self,host,port,path,data):
-        import aiocoap;await self.ensure()
-        uri=f"coap://[{host}]:{port}{path}"
-        try:
-            r=await asyncio.wait_for(self._ctx.request(aiocoap.Message(code=aiocoap.PUT,uri=uri,payload=cbor2.dumps(data))).response,timeout=5)
-            return r.code.is_successful()
-        except:return False
+logging.basicConfig(level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+log = logging.getLogger("bridge")
 
+import aiocoap
+from aiocoap import resource, CHANGED, CONTENT
+
+# ── CoAP Resource /readings ───────────────────────────────────────
+class ReadingsResource(resource.Resource):
+    def __init__(self, bridge):
+        super().__init__()
+        self._bridge = bridge
+
+    async def render_post(self, request):
+        try:
+            data = cbor2.loads(request.payload)
+        except Exception:
+            log.warning("CBOR decode failed")
+            return aiocoap.Message(code=aiocoap.BAD_REQUEST)
+
+        now_ms = int(time.time() * 1000)
+        nid = data.get("id", "unknown")
+
+        # ── Separar telemetría (time-series) de atributos (estáticos) ──
+        telemetry_keys = {"t", "h", "b", "r", "u"}
+        attr_keys      = {"zn", "tp", "x", "y", "v", "lat", "lng"}
+
+        telemetry_vals = {}
+        attr_vals      = {}
+
+        for k, v in data.items():
+            if k in telemetry_keys:
+                telemetry_vals[k] = v
+            elif k in attr_keys:
+                attr_vals[k] = v
+
+        # Renombrar para ThingsBoard
+        tb_telemetry = {}
+        if "t" in telemetry_vals: tb_telemetry["temperature"] = round(telemetry_vals["t"], 1)
+        if "h" in telemetry_vals: tb_telemetry["humidity"]    = int(telemetry_vals["h"])
+        if "b" in telemetry_vals: tb_telemetry["battery"]     = int(telemetry_vals["b"])
+        if "r" in telemetry_vals: tb_telemetry["rssi"]        = int(telemetry_vals["r"])
+        if "u" in telemetry_vals: tb_telemetry["uptime"]      = int(telemetry_vals["u"])
+
+        tb_attrs = {}
+        if "zn" in attr_vals: tb_attrs["zone"]    = attr_vals["zn"]
+        if "tp" in attr_vals: tb_attrs["type"]    = attr_vals["tp"]
+        if "x"   in attr_vals: tb_attrs["pos_x"]   = round(attr_vals["x"], 1)
+        if "y"   in attr_vals: tb_attrs["pos_y"]   = round(attr_vals["y"], 1)
+        if "lat" in attr_vals: tb_attrs["lat"]     = round(attr_vals["lat"], 6)
+        if "lng" in attr_vals: tb_attrs["lng"]     = round(attr_vals["lng"], 6)
+        if "v"   in attr_vals: tb_attrs["version"] = attr_vals["v"]
+
+        # ── Publicar MQTT ──
+        if tb_telemetry:
+            self._bridge.mqtt.telemetry(nid, now_ms, tb_telemetry)
+            log.info(">>> %s t=%.1f°C h=%d%% batt=%dmV rssi=%d uptime=%ds",
+                     nid,
+                     tb_telemetry.get("temperature", 0),
+                     tb_telemetry.get("humidity", 0),
+                     tb_telemetry.get("battery", 0),
+                     tb_telemetry.get("rssi", 0),
+                     tb_telemetry.get("uptime", 0))
+
+        # ── Registrar nodo + atributos (solo la primera vez) ──
+        is_new = nid not in self._bridge.nodes
+        if is_new:
+            self._bridge.nodes[nid] = {
+                "id": nid,
+                "zone": tb_attrs.get("zone", ""),
+                "type": tb_attrs.get("type", "TH"),
+                "pos_x": tb_attrs.get("pos_x", 0),
+                "pos_y": tb_attrs.get("pos_y", 0)
+            }
+            self._bridge.mqtt.connect_dev(nid, tb_attrs.get("type", "Sensor"))
+            log.info("REGISTER %s → zone=%s type=%s pos=(%.1f,%.1f)",
+                     nid,
+                     tb_attrs.get("zone", "?"),
+                     tb_attrs.get("type", "?"),
+                     tb_attrs.get("pos_x", 0),
+                     tb_attrs.get("pos_y", 0))
+
+        # Publicar atributos (cada vez que cambien o primera vez)
+        if tb_attrs and (is_new or self._bridge._attrs_changed(nid, tb_attrs)):
+            self._bridge.mqtt.attributes(nid, tb_attrs)
+
+        # ── Downlink: comandos pendientes ──
+        cmd = self._bridge.pending_commands.pop(nid, None)
+        resp = b'\xa0'   # CBOR {} = sin comando
+        if cmd:
+            log.info("DOWNLINK %s → %s", nid, cmd)
+            try:
+                resp = cbor2.dumps(cmd)
+            except Exception:
+                resp = b'\xa0'
+
+        return aiocoap.Message(code=CONTENT, payload=resp,
+                               content_format=60)
+
+# ── Bridge ────────────────────────────────────────────────────────
 class Bridge:
-    def __init__(self,path):
-        with open(path)as f:self.cfg=yaml.safe_load(f)
-        self.coap=CoAPReader()
-        self.mqtt=MQTTPublisher(self.cfg)
-        self.rpc=MQTTSubscriber(self.cfg,self._on_rpc)
-        self.dl=DownlinkHandler({},self.coap,self.mqtt)
-        self.nodes={};self._run=True
+    def __init__(self, path):
+        with open(path) as f: self.cfg = yaml.safe_load(f)
+        self.mqtt = MQTTPublisher(self.cfg)
+        self.rpc   = MQTTSubscriber(self.cfg, self._on_rpc)
+        self.nodes = {}
+        self.pending_commands = {}
+        self._node_attrs = {}  # track last known attrs to detect changes
+        self._run = True
 
-    def _on_rpc(self,dev,rid,method,params):
-        n=next((n for nid,n in self.nodes.items() if f"Thread {nid}"==dev or nid==dev),None)
-        if not n:return
-        log.info("RPC %s -> %s (port %d)",method,n["id"],n["port"])
-        if method=="set_valve":
-            asyncio.run_coroutine_threadsafe(self.coap.put_cbor("::1",n["port"],"/act/valve",{"v":params.get("state",0)}),asyncio.get_event_loop())
+    def _attrs_changed(self, nid, attrs):
+        old = self._node_attrs.get(nid, {})
+        self._node_attrs[nid] = attrs
+        return old != attrs
 
-    async def _discover(self):
-        sim=self.cfg.get("simulation",{})
-        if not sim.get("enabled"):return
-        for nd in sim.get("nodes",[]):
-            nid=nd["node_id"];port=nd.get("coap_port",15683)
-            if nid in self.nodes:continue
-            h=await self.coap.get_cbor("::1",port,"/sys/health")
-            if h:
-                self.nodes[nid]={"id":nid,"zone":nd.get("zone",""),"port":port,"type":nd.get("type","TH")}
-                self.mqtt.connect_dev(f"Thread {nid}",nd.get("type","Sensor"))
-                log.info(">>> CONNECTED: %s (port %d, batt=%d)",nid,port,h.get("batt",0))
+    def _on_rpc(self, dev, rid, method, params):
+        nid = dev.replace("Thread ", "")
+        if nid not in self.nodes:
+            log.warning("RPC a nodo desconocido: %s", dev)
+            return
+        log.info("RPC %s → %s (%s)", method, nid, params)
+        if method == "set_valve":
+            self.pending_commands[nid] = {"v": params.get("state", 0)}
+        elif method == "set_thresholds":
+            self.pending_commands[nid] = {
+                "tt": params.get("tt", 0.5),
+                "ht": params.get("ht", 3),
+                "hb": params.get("hb", 45)
+            }
 
-    async def _read_and_publish(self):
-        now_ms=int(time.time()*1000)
-        for nid,n in list(self.nodes.items()):
-            port=n["port"]
-            t=await self.coap.get_cbor("::1",port,"/env/temp")
-            h=await self.coap.get_cbor("::1",port,"/env/hum")
-            s=await self.coap.get_cbor("::1",port,"/sys/health")
-            if t or h or s:
-                vals={}
-                if t:vals["temperature"]=round(t.get("t",0),1)
-                if h:vals["humidity"]=h.get("h",0)
-                if s:vals["battery"]=s.get("batt",0);vals["rssi"]=s.get("rssi",0);vals["uptime"]=s.get("up",0)
-                self.mqtt.telemetry(f"Thread {nid}",now_ms,vals)
-                log.info(">>> %s: t=%.1f h=%d batt=%d",nid,vals.get("temperature",0),vals.get("humidity",0),vals.get("battery",0))
+    async def start_coap_server(self):
+        root = resource.Site()
+        root.add_resource(["readings"], ReadingsResource(self))
+        root.add_resource([".well-known", "core"],
+            resource.WKCResource(root.get_resources_as_linkheader()))
+        await aiocoap.Context.create_server_context(root, bind=("::", 5685))
+        log.info("CoAP Server [::]:5685 /readings")
 
     async def start(self):
-        log.info("="*50);log.info("BRIDGE STARTING - simulation mode");log.info("="*50)
+        log.info("=" * 50)
+        log.info("BRIDGE CoAP Server — modo real + Attributes + RPC")
+        log.info("=" * 50)
         self.mqtt.connect()
-        await self._discover()
-        log.info("Discovered %d nodes",len(self.nodes))
-        while self._run:
-            try:
-                await self._read_and_publish()
-                await asyncio.sleep(5)
-                if len(self.nodes)<5:await self._discover()
-            except KeyboardInterrupt:break
-            except Exception as e:log.error("Loop: %s",e)
+        await self.start_coap_server()
+        log.info("Esperando POSTs de nodos Thread...")
+        try:
+            while self._run:
+                await asyncio.sleep(10)
+        except KeyboardInterrupt:
+            pass
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument("-c","--config",default="config.yaml")
-    b=Bridge(p.parse_args().config)
-    try:asyncio.run(b.start())
-    except KeyboardInterrupt:log.info("Stopped")
-if __name__=="__main__":main()
+    p = argparse.ArgumentParser()
+    p.add_argument("-c", "--config", default="config.yaml")
+    b = Bridge(p.parse_args().config)
+    try:
+        asyncio.run(b.start())
+    except KeyboardInterrupt:
+        log.info("Stopped")
+
+if __name__ == "__main__":
+    main()

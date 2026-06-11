@@ -194,14 +194,21 @@ const App = (() => {
   }
 
   function isDeviceActive(dev) {
-    const attrs = dev.attributes || {};
-    if (attrs.active === false || attrs.active === 'false') return false;
     const tel = dev.telemetry || {};
-    const ts = parseInt(tel._ts);
-    if (!isNaN(ts) && ts > 0) return (Date.now() - ts) < 40000;
+    const hasData = tel.temperature !== undefined && tel.temperature !== null;
+    if (!hasData) return false;
+
+    const attrs = dev.attributes || {};
+    const now = Date.now();
+    const TIMEOUT = 600000; // 10 min
+
     const lastActivity = parseInt(attrs.lastActivityTime);
-    if (!isNaN(lastActivity) && lastActivity > 0) return (Date.now() - lastActivity) < 40000;
-    return false;
+    if (!isNaN(lastActivity) && lastActivity > 0) return (now - lastActivity) < TIMEOUT;
+
+    const ts = parseInt(tel._ts);
+    if (!isNaN(ts) && ts > 0) return (now - ts) < TIMEOUT;
+
+    return true; // tiene datos, asumir activo
   }
 
   function isGateway(dev) {

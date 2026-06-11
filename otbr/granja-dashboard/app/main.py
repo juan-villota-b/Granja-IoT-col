@@ -107,21 +107,37 @@ async def api_devices(request: Request, gateway: str = "Gateway-asus"):
 
     all_devices = await tb.get_tenant_devices(tb_token)
 
-    result = []
+    filtered = []
     for dev in all_devices:
         name = dev.get("name", "")
-        if name != gateway and not name.startswith("Thread") and not name.startswith("NODO"):
+        dtype = dev.get("type", "")
+        if name != gateway and dtype != "sensor_sed":
             continue
         dev_id = dev.get("id", {}).get("id")
         if not dev_id:
             continue
-        attrs = await tb.get_device_attributes(tb_token, dev_id)
-        telemetry = await tb.get_latest_telemetry(tb_token, dev_id)
+        filtered.append((dev_id, name, dtype, dev.get("type", "default"), dev.get("label", "")))
+
+    # Fetch attributes and telemetry in parallel for all devices
+    tasks = []
+    for dev_id, _, _, _, _ in filtered:
+        tasks.append(tb.get_device_attributes(tb_token, dev_id))
+        tasks.append(tb.get_latest_telemetry(tb_token, dev_id))
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    result = []
+    for i, (dev_id, name, dtype, devtype, label) in enumerate(filtered):
+        attrs = results[i * 2]
+        telemetry = results[i * 2 + 1]
+        if isinstance(attrs, Exception):
+            attrs = {}
+        if isinstance(telemetry, Exception):
+            telemetry = {}
         result.append({
             "id": dev_id,
             "name": name,
-            "type": dev.get("type", "default"),
-            "label": dev.get("label", ""),
+            "type": devtype,
+            "label": label,
             "attributes": attrs,
             "telemetry": telemetry,
         })
@@ -239,14 +255,14 @@ async def poll_and_broadcast():
                     if last_activity is not None:
                         extras["_lastActivityTime"] = last_activity
                     msg = json.dumps({"device_id": dev_id, **telemetry, **extras})
-                    for ws in connected_websockets[dev_id][:]:
-                        try:
-                            await ws.send_text(msg)
-                        except Exception:
-                            if ws in connected_websockets.get(dev_id, []):
-                                connected_websockets[dev_id].remove(ws)
-            except Exception:
-                pass
+                for ws in connected_websockets[dev_id][:]:
+                    try:
+                        await ws.send_text(msg)
+                    except Exception:
+                        connected_websockets[dev_id].remove(ws)
+            except Exception as e:
+                import logging
+                logging.getLogger("dashboard").warning("poll error: %s", e)
         await asyncio.sleep(5)
 
 

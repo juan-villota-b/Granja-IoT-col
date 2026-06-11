@@ -1,97 +1,90 @@
 #!/usr/bin/env python3
-import argparse,asyncio,logging,time,yaml,cbor2,json,sys
-from mqtt.publisher import MQTTPublisher
-from mqtt.subscriber import MQTTSubscriber
 
-logging.basicConfig(level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+import argparse, asyncio, logging, time, yaml, cbor2
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 log = logging.getLogger("bridge")
 
 import aiocoap
-from aiocoap import resource, CHANGED, CONTENT
+from aiocoap import resource, CONTENT, BAD_REQUEST
 
-# ── CoAP Resource /readings ───────────────────────────────────────
+from mqtt.publisher  import MQTTPublisher
+from mqtt.subscriber import MQTTSubscriber
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  CoAP Resource /readings — registro + telemetria unificados
+# ═══════════════════════════════════════════════════════════════════
+
 class ReadingsResource(resource.Resource):
     def __init__(self, bridge):
         super().__init__()
         self._bridge = bridge
 
     async def render_post(self, request):
+        """CON POST /readings — auto-registro + telemetria + downlink."""
+        src = request.remote.hostinfo if request.remote else None
+        ipv6 = str(src) if src else "unknown"
+        if ']' in ipv6: ipv6 = ipv6.split(']')[0]
+        if '[' in ipv6: ipv6 = ipv6.split('[')[-1]
+        if '%' in ipv6: ipv6 = ipv6.split('%')[0]
+
         try:
             data = cbor2.loads(request.payload)
         except Exception:
-            log.warning("CBOR decode failed")
-            return aiocoap.Message(code=aiocoap.BAD_REQUEST)
+            return aiocoap.Message(code=BAD_REQUEST)
 
         now_ms = int(time.time() * 1000)
+
+        # ── Extraer id del nodo ──
         nid = data.get("id", "unknown")
+        if nid == "unknown":
+            return aiocoap.Message(code=BAD_REQUEST)
 
-        # ── Separar telemetría (time-series) de atributos (estáticos) ──
-        telemetry_keys = {"t", "h", "b", "r", "u"}
-        attr_keys      = {"zn", "tp", "x", "y", "v", "lat", "lng"}
+        # ── Auto-registro si Bridge se reinicio ──
+        is_new = nid not in self._bridge.nodes
+        if is_new:
+            ntype = data.get("tp", "sensor_sed")
+            self._bridge.nodes[nid] = {
+                "id": nid, "ipv6": ipv6,
+                "zone": data.get("zn", ""),
+                "type": ntype,
+                "lat": data.get("lat", 0.0),
+                "lng": data.get("lng", 0.0),
+            }
+            self._bridge.mqtt.connect_dev(nid, ntype)
+            tb_attrs = {
+                "zone": data.get("zn", ""),
+                "type": ntype,
+                "version": data.get("v", ""),
+                "lat": round(data.get("lat", 0.0), 6),
+                "lng": round(data.get("lng", 0.0), 6),
+            }
+            self._bridge.mqtt.attributes(nid, tb_attrs)
+            log.info("AUTO-REGISTER %s from %s (Bridge recovery)", nid, ipv6)
 
-        telemetry_vals = {}
-        attr_vals      = {}
-
-        for k, v in data.items():
-            if k in telemetry_keys:
-                telemetry_vals[k] = v
-            elif k in attr_keys:
-                attr_vals[k] = v
-
-        # Renombrar para ThingsBoard
-        tb_telemetry = {}
-        if "t" in telemetry_vals: tb_telemetry["temperature"] = round(telemetry_vals["t"], 1)
-        if "h" in telemetry_vals: tb_telemetry["humidity"]    = int(telemetry_vals["h"])
-        if "b" in telemetry_vals: tb_telemetry["battery"]     = int(telemetry_vals["b"])
-        if "r" in telemetry_vals: tb_telemetry["rssi"]        = int(telemetry_vals["r"])
-        if "u" in telemetry_vals: tb_telemetry["uptime"]      = int(telemetry_vals["u"])
-
-        tb_attrs = {}
-        if "zn" in attr_vals: tb_attrs["zone"]    = attr_vals["zn"]
-        if "tp" in attr_vals: tb_attrs["type"]    = attr_vals["tp"]
-        if "x"   in attr_vals: tb_attrs["pos_x"]   = round(attr_vals["x"], 1)
-        if "y"   in attr_vals: tb_attrs["pos_y"]   = round(attr_vals["y"], 1)
-        if "lat" in attr_vals: tb_attrs["lat"]     = round(attr_vals["lat"], 6)
-        if "lng" in attr_vals: tb_attrs["lng"]     = round(attr_vals["lng"], 6)
-        if "v"   in attr_vals: tb_attrs["version"] = attr_vals["v"]
-
-        # ── Publicar MQTT ──
-        if tb_telemetry:
+        # ── Telemetria ──
+        if "t" in data:
+            tb_telemetry = {
+                "temperature": round(data["t"], 1),
+            }
+            if "r" in data:
+                tb_telemetry["rssi"] = int(data["r"])
+            if "u" in data:
+                tb_telemetry["uptime"] = int(data["u"])
             self._bridge.mqtt.telemetry(nid, now_ms, tb_telemetry)
-            log.info(">>> %s t=%.1f°C h=%d%% batt=%dmV rssi=%d uptime=%ds",
+            log.info(">>> %s t=%.1f°C rssi=%d up=%ds",
                      nid,
                      tb_telemetry.get("temperature", 0),
-                     tb_telemetry.get("humidity", 0),
-                     tb_telemetry.get("battery", 0),
                      tb_telemetry.get("rssi", 0),
                      tb_telemetry.get("uptime", 0))
 
-        # ── Registrar nodo + atributos (solo la primera vez) ──
-        is_new = nid not in self._bridge.nodes
-        if is_new:
-            self._bridge.nodes[nid] = {
-                "id": nid,
-                "zone": tb_attrs.get("zone", ""),
-                "type": tb_attrs.get("type", "TH"),
-                "pos_x": tb_attrs.get("pos_x", 0),
-                "pos_y": tb_attrs.get("pos_y", 0)
-            }
-            self._bridge.mqtt.connect_dev(nid, tb_attrs.get("type", "Sensor"))
-            log.info("REGISTER %s → zone=%s type=%s pos=(%.1f,%.1f)",
-                     nid,
-                     tb_attrs.get("zone", "?"),
-                     tb_attrs.get("type", "?"),
-                     tb_attrs.get("pos_x", 0),
-                     tb_attrs.get("pos_y", 0))
-
-        # Publicar atributos (cada vez que cambien o primera vez)
-        if tb_attrs and (is_new or self._bridge._attrs_changed(nid, tb_attrs)):
-            self._bridge.mqtt.attributes(nid, tb_attrs)
-
         # ── Downlink: comandos pendientes ──
         cmd = self._bridge.pending_commands.pop(nid, None)
-        resp = b'\xa0'   # CBOR {} = sin comando
+        resp = b'\xa0'
         if cmd:
             log.info("DOWNLINK %s → %s", nid, cmd)
             try:
@@ -99,24 +92,23 @@ class ReadingsResource(resource.Resource):
             except Exception:
                 resp = b'\xa0'
 
-        return aiocoap.Message(code=CONTENT, payload=resp,
-                               content_format=60)
+        return aiocoap.Message(code=CONTENT, payload=resp, content_format=60)
 
-# ── Bridge ────────────────────────────────────────────────────────
+
+# ═══════════════════════════════════════════════════════════════════
+#  Bridge
+# ═══════════════════════════════════════════════════════════════════
+
 class Bridge:
     def __init__(self, path):
-        with open(path) as f: self.cfg = yaml.safe_load(f)
-        self.mqtt = MQTTPublisher(self.cfg)
+        with open(path) as f:
+            self.cfg = yaml.safe_load(f)
+        self.mqtt  = MQTTPublisher(self.cfg)
         self.rpc   = MQTTSubscriber(self.cfg, self._on_rpc)
         self.nodes = {}
         self.pending_commands = {}
-        self._node_attrs = {}  # track last known attrs to detect changes
+        self._node_attrs = {}
         self._run = True
-
-    def _attrs_changed(self, nid, attrs):
-        old = self._node_attrs.get(nid, {})
-        self._node_attrs[nid] = attrs
-        return old != attrs
 
     def _on_rpc(self, dev, rid, method, params):
         nid = dev.replace("Thread ", "")
@@ -126,33 +118,34 @@ class Bridge:
         log.info("RPC %s → %s (%s)", method, nid, params)
         if method == "set_valve":
             self.pending_commands[nid] = {"v": params.get("state", 0)}
-        elif method == "set_thresholds":
+        elif method in ("set_config", "set_thresholds"):
             self.pending_commands[nid] = {
                 "tt": params.get("tt", 0.5),
-                "ht": params.get("ht", 3),
-                "hb": params.get("hb", 45)
+                "hb": params.get("hb", 300),
             }
 
-    async def start_coap_server(self):
+    async def start_coap(self):
         root = resource.Site()
         root.add_resource(["readings"], ReadingsResource(self))
         root.add_resource([".well-known", "core"],
-            resource.WKCResource(root.get_resources_as_linkheader()))
-        await aiocoap.Context.create_server_context(root, bind=("::", 5685))
-        log.info("CoAP Server [::]:5685 /readings")
+                          resource.WKCResource(root.get_resources_as_linkheader()))
+        port = self.cfg.get("coap", {}).get("port", 5685)
+        await aiocoap.Context.create_server_context(root, bind=("::", port))
+        log.info("CoAP [::]:%s /readings (push pasivo, con auto-registro)", port)
 
     async def start(self):
         log.info("=" * 50)
-        log.info("BRIDGE CoAP Server — modo real + Attributes + RPC")
+        log.info("BRIDGE CoAP Push v2 — auto-registro + downlink piggyback")
         log.info("=" * 50)
         self.mqtt.connect()
-        await self.start_coap_server()
-        log.info("Esperando POSTs de nodos Thread...")
+        await self.start_coap()
+        log.info("Esperando POST de nodos (telemetria + auto-registro)...")
         try:
             while self._run:
                 await asyncio.sleep(10)
         except KeyboardInterrupt:
             pass
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -162,6 +155,7 @@ def main():
         asyncio.run(b.start())
     except KeyboardInterrupt:
         log.info("Stopped")
+
 
 if __name__ == "__main__":
     main()

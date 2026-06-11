@@ -44,7 +44,7 @@ function initMap(devices) {
 
   // Guardar el estado previo en memoria antes de que las tiles lo pisen
   var savedView = null;
-  try { savedView = localStorage.getItem('granja_map_state'); } catch(e) {}
+  try { savedView = localStorage.getItem('granja_map_state'); } catch(e) { /* localStorage blocked */ }
 
   const nodes = devices.filter(d => !App.isGateway(d));
   nodes.forEach(d => { _nodeCoords[d.id] = getDeviceLatLng(d); });
@@ -61,7 +61,7 @@ function initMap(devices) {
         center = [sv.lat, sv.lng];
         zoom = sv.zoom;
       }
-    } catch(e) {}
+    } catch(e) { /* bad saved state, use defaults */ }
   }
 
   map = L.map('dashboard-map', {
@@ -96,16 +96,29 @@ function initMap(devices) {
         localStorage.setItem('granja_map_state', JSON.stringify({
           lat: c.lat, lng: c.lng, zoom: map.getZoom()
         }));
-      } catch(e) {}
+    } catch(e) { /* bad saved state, use defaults */ }
     }, 300);
   });
 
   setTimeout(function() {
-    try { map.invalidateSize(); } catch(e){}
+    try { map.invalidateSize(); } catch(e){ /* map not ready */ }
   }, 400);
 
   if (window._mapRefreshInterval) clearInterval(window._mapRefreshInterval);
-  window._mapRefreshInterval = setInterval(refreshAllMarkers, 10000);
+  window._mapRefreshInterval = setInterval(async () => {
+    await refreshDeviceTimestamps();
+    refreshAllMarkers();
+  }, 15000);
+
+  // Recuperar estado al volver a la pestaña
+  document.removeEventListener('visibilitychange', _onVisibilityChange);
+  window._onVisibilityChange = async () => {
+    if (document.visibilityState === 'visible') {
+      await refreshDeviceTimestamps();
+      refreshAllMarkers();
+    }
+  };
+  document.addEventListener('visibilitychange', window._onVisibilityChange);
 }
 
 function updateStatusBar(devices) {
@@ -158,7 +171,7 @@ function addDeviceMarker(dev) {
   const zone = attrs.zone || attrs.Zone || '';
 
   const isValve = (dev.type || '').toLowerCase().includes('valve') || (dev.name || '').toLowerCase().includes('valve');
-  const isSensor = dev.type === 'TH' || dev.type === 'SED' || (dev.name || '').toLowerCase().includes('th') || (dev.name || '').toLowerCase().includes('auto');
+  const isSensor = (dev.type || '').toLowerCase().includes('sed') || (dev.type || '').toLowerCase().includes('th') || (dev.name || '').toLowerCase().includes('sensor') || (dev.name || '').toLowerCase().includes('th_auto');
 
   let markerColor, size, iconHtml;
 
@@ -259,6 +272,7 @@ function addDeviceMarker(dev) {
   marker._name = dev.name;
   marker._active = active;
   marker._isValve = isValve;
+  marker._isSensor = isSensor;
   marker._zone = zone;
 
   if (gw) {
@@ -343,13 +357,15 @@ function updateMarkerTelemetry(deviceId, telemetry) {
   if (marker.isGateway) return;
   const tel = telemetry || {};
 
-  const ts = parseInt(tel._ts);
-  const lastSeen = !isNaN(ts) && ts > 0 ? ts : Date.now();
-  const active = (Date.now() - lastSeen) < 40000;
+  const dev = (App.state.devices || []).find(d => d.id === deviceId);
+  const active = dev ? App.isDeviceActive(dev) : marker._active;
 
   if (active !== marker._active) {
     marker._active = active;
-    const iconColor = active ? (marker._isValve ? '#ef4444' : '#22c55e') : '#6b7280';
+    const iconColor = !active ? '#6b7280'
+      : marker._isValve ? '#ef4444'
+      : marker._isSensor ? '#22c55e'
+      : '#3b82f6';
     const opacity = active ? '1' : '0.7';
     const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
     const size = 18;
@@ -394,7 +410,10 @@ function refreshAllMarkers() {
     const active = App.isDeviceActive(dev);
     if (active !== marker._active) {
       marker._active = active;
-      const iconColor = active ? (marker._isValve ? '#ef4444' : '#22c55e') : '#6b7280';
+    const iconColor = !active ? '#6b7280'
+      : marker._isValve ? '#ef4444'
+      : marker._isSensor ? '#22c55e'
+      : '#3b82f6';
       const opacity = active ? '1' : '0.7';
       const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
       const size = 18;
@@ -408,4 +427,28 @@ function refreshAllMarkers() {
   });
   drawConnections();
   updateStatusBar(App.state.devices);
+}
+
+// Refrescar timestamps de actividad cada 15s sin reinit el mapa
+async function refreshDeviceTimestamps() {
+  try {
+    const res = await fetch('/api/devices', { credentials: 'include' });
+    if (res.status === 401) { window.location.reload(); return; }
+    if (!res.ok) { console.warn('[ts] HTTP', res.status); return; }
+    const data = await res.json();
+    const fresh = data.devices || [];
+    if (!App.state.devices) return;
+    fresh.forEach(fd => {
+      const existing = App.state.devices.find(d => d.id === fd.id);
+      if (!existing) return;
+      if (fd.telemetry && fd.telemetry._ts) {
+        if (!existing.telemetry) existing.telemetry = {};
+        existing.telemetry._ts = fd.telemetry._ts;
+      }
+      if (fd.attributes && fd.attributes.lastActivityTime) {
+        if (!existing.attributes) existing.attributes = {};
+        existing.attributes.lastActivityTime = fd.attributes.lastActivityTime;
+      }
+    });
+  } catch(e) { console.warn('[ts]', e.message || e); }
 }

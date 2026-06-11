@@ -1,28 +1,28 @@
 /* ═══════════════════════════════════════════════════════════════════
    Granja Dashboard · realtime.js
-   WebSocket + Chart.js sparklines en tiempo real
+   WebSocket + Chart.js historicos en tiempo real (ultimos 20 registros)
    ═══════════════════════════════════════════════════════════════════ */
 
 let ws = null;
 let tempChart = null;
 let humChart = null;
 let battChart = null;
-const MAX_POINTS = 60;
-let _lastVals = {};
+let rssiChart = null;
+const MAX_POINTS = 20;
+const _lastVals = { temp: {}, hum: {}, batt: {}, rssi: {} };
 let _reconnectTimer = null;
 let _currentDeviceId = null;
-
-['temp', 'hum', 'batt'].forEach(k => _lastVals[k] = { val: null, ts: 0 });
 
 function _cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-function createSimpleChart(canvasId, label, color) {
+function createHistoryChart(canvasId, label, color) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return null;
   const gridColor = _cssVar('--border');
   const tickColor = _cssVar('--text-dim');
+  const textColor = _cssVar('--text-muted');
   return new Chart(ctx, {
     type: 'line',
     data: {
@@ -32,36 +32,63 @@ function createSimpleChart(canvasId, label, color) {
         data: [],
         borderColor: color,
         backgroundColor: color + '18',
-        borderWidth: 1.5,
-        pointRadius: 0,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: color,
+        pointBorderColor: 'transparent',
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 150 },
+      animation: { duration: 200 },
       interaction: { intersect: false, mode: 'index' },
       scales: {
         x: {
-          display: false,
+          display: true,
           grid: { display: false },
+          ticks: {
+            color: tickColor,
+            font: { size: 9 },
+            maxTicksLimit: 6,
+            maxRotation: 45,
+          },
         },
         y: {
+          display: true,
           grid: { color: gridColor },
-          ticks: { color: tickColor, font: { size: 9 }, maxTicksLimit: 3, callback: v => v.toFixed(1) },
+          ticks: {
+            color: tickColor,
+            font: { size: 9 },
+            maxTicksLimit: 4,
+            callback: v => parseFloat(v).toFixed(1),
+          },
         },
       },
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          backgroundColor: _cssVar('--surface'),
+          titleColor: textColor,
+          bodyColor: color,
+          borderColor: gridColor,
+          borderWidth: 1,
+          cornerRadius: 6,
+          padding: 8,
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${parseFloat(ctx.raw).toFixed(1)}`,
+          },
+        },
+      },
     },
   });
 }
 
 function connectWS(deviceId) {
-  if (ws) {
-    try { ws.close(); } catch(e) { console.error('[ws] close:', e); }
-  }
+  if (ws) { try { ws.close(); } catch(e) { console.error(e); } }
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(`${protocol}//${window.location.host}/ws/${deviceId}`);
   _currentDeviceId = deviceId;
@@ -70,13 +97,12 @@ function connectWS(deviceId) {
     try {
       const data = JSON.parse(event.data);
       const now = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      addPoint(tempChart, now, data.temperature, 'temp');
-      addPoint(humChart, now, data.humidity, 'hum');
-      addPoint(battChart, now, data.battery, 'batt');
+      addPoint(tempChart, 'temp', now, data.temperature);
+      addPoint(humChart, 'hum', now, data.humidity);
+      addPoint(battChart, 'batt', now, data.battery);
+      addPoint(rssiChart, 'rssi', now, data.rssi);
 
-      if (typeof updateMarkerTelemetry === 'function') {
-        updateMarkerTelemetry(deviceId, data);
-      }
+      if (typeof updateMarkerTelemetry === 'function') updateMarkerTelemetry(deviceId, data);
 
       const dev = App.state.devices.find(d => d.id === deviceId);
       if (dev) {
@@ -86,25 +112,15 @@ function connectWS(deviceId) {
         if (data.battery !== undefined) dev.telemetry.battery = data.battery;
         if (data.rssi !== undefined) dev.telemetry.rssi = data.rssi;
         if (data.uptime !== undefined) dev.telemetry.uptime = data.uptime;
-        if (data._ts !== undefined) dev.telemetry._ts = data._ts;
-        if (!dev.attributes) dev.attributes = {};
-        if (data._active !== undefined) dev.attributes.active = data._active;
-        if (data._lastActivityTime !== undefined) dev.attributes.lastActivityTime = data._lastActivityTime;
-        if (App.state.activeNodeId === deviceId) {
-          App.renderNodeInfo(dev);
-        }
+      if (data._ts !== undefined) dev.telemetry._ts = data._ts;
+      if (data._lastActivityTime !== undefined) dev.attributes.lastActivityTime = data._lastActivityTime;
+        if (App.state.activeNodeId === deviceId) App.renderNodeInfo(dev);
       }
     } catch(e) { console.error('[ws] onmessage:', e); }
   };
 
-  ws.onclose = () => {
-    ws = null;
-    scheduleReconnect();
-  };
-
-  ws.onerror = () => {
-    console.error('[ws] error on', deviceId);
-  };
+  ws.onclose = () => { ws = null; scheduleReconnect(); };
+  ws.onerror = () => { console.error('[ws] error on', deviceId); };
 }
 
 function scheduleReconnect() {
@@ -112,15 +128,12 @@ function scheduleReconnect() {
   if (!_currentDeviceId) return;
   _reconnectTimer = setTimeout(() => {
     _reconnectTimer = null;
-    if (!ws && _currentDeviceId) {
-      connectWS(_currentDeviceId);
-    }
+    if (!ws && _currentDeviceId) connectWS(_currentDeviceId);
   }, 3000);
 }
 
 function startRealtimeCharts(deviceId) {
   if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
-
   if (!document.getElementById('chart-temp')) return;
   _currentDeviceId = deviceId;
 
@@ -128,30 +141,28 @@ function startRealtimeCharts(deviceId) {
     if (tempChart) tempChart.destroy();
     if (humChart) humChart.destroy();
     if (battChart) battChart.destroy();
-  } catch(e) { console.error('[charts] destroy:', e); }
+    if (rssiChart) rssiChart.destroy();
+  } catch(e) { console.error(e); }
 
-  tempChart = createSimpleChart('chart-temp', 'Temperatura', '#f59e0b');
-  humChart = createSimpleChart('chart-hum', 'Humedad', '#06b6d4');
-  battChart = createSimpleChart('chart-batt', 'Batería', '#22c55e');
+  tempChart = createHistoryChart('chart-temp', 'Temperatura', '#f59e0b');
+  humChart = createHistoryChart('chart-hum', 'Humedad', '#06b6d4');
+  battChart = createHistoryChart('chart-batt', 'Bateria', '#22c55e');
+  rssiChart = createHistoryChart('chart-rssi', 'RSSI', '#a78bfa');
 
   connectWS(deviceId);
 }
 
-function addPoint(chart, label, value, key) {
+function addPoint(chart, key, label, value) {
   if (!chart || value === undefined || value === null) return;
-  const parsed = parseFloat(value);
-  if (isNaN(parsed)) return;
-  const now = Date.now();
+  const v = parseFloat(value);
+  if (isNaN(v)) return;
 
-  const last = _lastVals[key];
-  if (key && last) {
-    if (parsed === last.val && (now - last.ts) < 30000) return;
-  }
-  if (key) _lastVals[key] = { val: parsed, ts: now };
+  if (_lastVals[key] && v === _lastVals[key].val) return;
+  _lastVals[key] = { val: v, ts: Date.now() };
 
   chart.data.labels.push(label);
-  chart.data.datasets[0].data.push(parsed);
-  if (chart.data.labels.length > MAX_POINTS) {
+  chart.data.datasets[0].data.push(v);
+  while (chart.data.labels.length > MAX_POINTS) {
     chart.data.labels.shift();
     chart.data.datasets[0].data.shift();
   }
