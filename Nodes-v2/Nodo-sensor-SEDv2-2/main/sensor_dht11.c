@@ -65,6 +65,7 @@ sensor_temp_t sensor_dht11_leer(void)
 
     gpio_num_t gpio = (gpio_num_t)g_gpio;
 
+    gpio_set_direction(gpio, GPIO_MODE_INPUT_OUTPUT_OD);
     gpio_set_level(gpio, 0);
     esp_rom_delay_us(DHT11_HOST_LOW_US);
     gpio_set_level(gpio, 1);
@@ -79,13 +80,18 @@ sensor_temp_t sensor_dht11_leer(void)
     if (!dht11_leer_bits(gpio, datos)) { taskENABLE_INTERRUPTS(); return lectura; }
     taskENABLE_INTERRUPTS();
 
+    ESP_LOGI(TAG, "RAW: %02x %02x %02x %02x %02x",
+             datos[0], datos[1], datos[2], datos[3], datos[4]);
+
     if ((uint8_t)(datos[0] + datos[1] + datos[2] + datos[3]) != datos[4]) {
-        ESP_LOGW(TAG, "Checksum DHT11 fallo");
+        ESP_LOGW(TAG, "Checksum DHT11 fallo: suma=%02x != cks=%02x",
+                 (uint8_t)(datos[0] + datos[1] + datos[2] + datos[3]), datos[4]);
         return lectura;
     }
 
     lectura.temperatura_c = (float)datos[2] + (float)datos[3] * 0.1f;
 
-    ESP_LOGI(TAG, "T=%.1fC", (double)lectura.temperatura_c);
+    ESP_LOGI(TAG, "T=%.1fC  hum=%d.%d%%",
+             (double)lectura.temperatura_c, datos[0], datos[1]);
     return lectura;
 }
