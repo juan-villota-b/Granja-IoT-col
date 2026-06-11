@@ -18,7 +18,8 @@
 
 #include "node_config.h"
 #include "config.h"
-#include "sensor_dht22.h"
+#include "sensor_dht11.h"
+#include "calibracion.h"
 #include "push_client.h"
 
 #include "openthread/thread.h"
@@ -78,7 +79,8 @@ void app_main(void)
     esp_vfs_eventfd_register(&efd_cfg);
 
     config_init();
-    sensor_dht22_init();
+    sensor_dht11_init();
+    cal_init();
 
     static esp_openthread_config_t ot_cfg = {
         .netif_config = ESP_NETIF_DEFAULT_OPENTHREAD(),
@@ -109,7 +111,8 @@ void app_main(void)
     otLinkSetPollPeriod(ot, 30000);
     esp_openthread_lock_release();
 
-    sensor_temp_t lectura = sensor_dht22_leer();
+    sensor_temp_t lectura = sensor_dht11_leer();
+    lectura.temperatura_c = cal_aplicar(lectura.temperatura_c);
     uint32_t uptime = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
 
     ESP_LOGI(TAG, "1er push (registro + telemetria)");
@@ -120,13 +123,14 @@ void app_main(void)
     uint32_t last_push_tick = uptime;
 
     while (1) {
-        lectura = sensor_dht22_leer();
+        lectura = sensor_dht11_leer();
+        lectura.temperatura_c = cal_aplicar(lectura.temperatura_c);
         uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
 
         float delta = fabsf(lectura.temperatura_c - last_temp);
         bool debe_push = false;
 
-        if (delta > g_config.temp_threshold_c)
+        if (delta >= g_config.temp_threshold_c)
             debe_push = true;
         else if ((uptime - last_push_tick) >= g_config.heartbeat_s)
             debe_push = true;

@@ -5,7 +5,8 @@
 #define NODE_TYPE "sensor_sed"
 #define FW_VERSION "5.2.0"
 
-#define TEMP_THRESHOLD_C_DEFAULT 0.5f
+#define DHT11_GPIO 4
+#define TEMP_THRESHOLD_C_DEFAULT 0.0f
 #define HEARTBEAT_S_DEFAULT 300
 #define SAMPLE_INTERVAL_MS 30000
 #define TEMP_BASELINE 25.0f
