@@ -11,6 +11,7 @@
 #include "coap3/coap.h"
 
 #include "node_config.h"
+#include "config.h"
 
 static const char *TAG = "push";
 
@@ -19,7 +20,7 @@ static uint32_t f32_to_u32(float f) { uint32_t x; memcpy(&x, &f, sizeof(x)); ret
 static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, uint32_t up)
 {
     size_t p = 0;
-    out[p++] = 0xA6;
+    out[p++] = 0xA8;
     out[p++] = 0x62; out[p++] = 'i'; out[p++] = 'd';
     size_t nl = strlen(NODE_ID);
     out[p++] = (uint8_t)(0x60 | nl);
@@ -52,6 +53,20 @@ static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, 
         out[p++] = (uint8_t)(t->luz_lux >> 8);
         out[p++] = (uint8_t)(t->luz_lux & 0xFF);
     }
+    out[p++] = 0x63; out[p++] = 'l'; out[p++] = 'a'; out[p++] = 't';
+    out[p++] = 0xFA;
+    uint32_t lat_u32 = f32_to_u32(g_config.lat);
+    out[p++] = (uint8_t)(lat_u32 >> 24);
+    out[p++] = (uint8_t)((lat_u32 >> 16) & 0xFF);
+    out[p++] = (uint8_t)((lat_u32 >> 8) & 0xFF);
+    out[p++] = (uint8_t)(lat_u32 & 0xFF);
+    out[p++] = 0x63; out[p++] = 'l'; out[p++] = 'n'; out[p++] = 'g';
+    out[p++] = 0xFA;
+    uint32_t lng_u32 = f32_to_u32(g_config.lng);
+    out[p++] = (uint8_t)(lng_u32 >> 24);
+    out[p++] = (uint8_t)((lng_u32 >> 16) & 0xFF);
+    out[p++] = (uint8_t)((lng_u32 >> 8) & 0xFF);
+    out[p++] = (uint8_t)(lng_u32 & 0xFF);
     out[p++] = 0x61; out[p++] = 'r';
     out[p++] = 0x38;
     out[p++] = (uint8_t)((-(int16_t)rssi) - 1);
@@ -64,10 +79,10 @@ static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, 
     return p;
 }
 
-static size_t encode_cbor_push(uint8_t out[48], sensor_temp_t *t, int8_t rssi, uint32_t up)
+static size_t encode_cbor_push(uint8_t out[64], sensor_temp_t *t, int8_t rssi, uint32_t up)
 {
     size_t p = 0;
-    out[p++] = 0xA4;
+    out[p++] = 0xA6;
     out[p++] = 0x62; out[p++] = 'i'; out[p++] = 'd';
     size_t nl = strlen(NODE_ID);
     out[p++] = (uint8_t)(0x60 | nl);
@@ -92,6 +107,20 @@ static size_t encode_cbor_push(uint8_t out[48], sensor_temp_t *t, int8_t rssi, u
         out[p++] = (uint8_t)(t->luz_lux >> 8);
         out[p++] = (uint8_t)(t->luz_lux & 0xFF);
     }
+    out[p++] = 0x63; out[p++] = 'l'; out[p++] = 'a'; out[p++] = 't';
+    out[p++] = 0xFA;
+    uint32_t lat_u32 = f32_to_u32(g_config.lat);
+    out[p++] = (uint8_t)(lat_u32 >> 24);
+    out[p++] = (uint8_t)((lat_u32 >> 16) & 0xFF);
+    out[p++] = (uint8_t)((lat_u32 >> 8) & 0xFF);
+    out[p++] = (uint8_t)(lat_u32 & 0xFF);
+    out[p++] = 0x63; out[p++] = 'l'; out[p++] = 'n'; out[p++] = 'g';
+    out[p++] = 0xFA;
+    uint32_t lng_u32 = f32_to_u32(g_config.lng);
+    out[p++] = (uint8_t)(lng_u32 >> 24);
+    out[p++] = (uint8_t)((lng_u32 >> 16) & 0xFF);
+    out[p++] = (uint8_t)((lng_u32 >> 8) & 0xFF);
+    out[p++] = (uint8_t)(lng_u32 & 0xFF);
     out[p++] = 0x61; out[p++] = 'r';
     out[p++] = 0x38;
     out[p++] = (uint8_t)((-(int16_t)rssi) - 1);

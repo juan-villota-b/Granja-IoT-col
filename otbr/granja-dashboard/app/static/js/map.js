@@ -9,8 +9,8 @@ let gatewayGroup = null;
 let nodeGroup = null;
 let connectionLines = null;
 
-const CENTER_LAT = 5.07;
-const CENTER_LNG = -75.52;
+const CENTER_LAT = 5.0298;
+const CENTER_LNG = -75.4715;
 const SCALE = 0.002;
 const ZOOM_THRESHOLD = 17;
 const INITIAL_ZOOM = 12;

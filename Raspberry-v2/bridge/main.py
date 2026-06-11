@@ -3,10 +3,10 @@
 import argparse, asyncio, json, logging, os, time, yaml, cbor2
 
 DEFAULT_COORDS = {
-    "NODO-SENSOR-1": (5.029056, -75.472472),
-    "NODO-SENSOR-2": (5.029065, -75.472472),
-    "NODO-SENSOR-3": (5.029056, -75.472463),
-    "NODO-SENSOR-4": (5.029047, -75.472472),
+    "NODO-SENSOR-1": (5.029056, -75.472472),     # ZONA-A: centro
+    "NODO-SENSOR-2": (5.030611, -75.467694),     # ZONA-B: ~180m NE
+    "NODO-SENSOR-3": (5.029056, -75.472293),     # ZONA-C: ~20m al este
+    "NODO-SENSOR-4": (5.028877, -75.472472),     # ZONA-D: ~20m al sur
 }
 
 logging.basicConfig(

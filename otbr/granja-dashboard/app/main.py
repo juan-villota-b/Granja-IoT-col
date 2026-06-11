@@ -255,11 +255,11 @@ async def poll_and_broadcast():
                     if last_activity is not None:
                         extras["_lastActivityTime"] = last_activity
                     msg = json.dumps({"device_id": dev_id, **telemetry, **extras})
-                for ws in connected_websockets[dev_id][:]:
-                    try:
-                        await ws.send_text(msg)
-                    except Exception:
-                        connected_websockets[dev_id].remove(ws)
+                    for ws in connected_websockets[dev_id][:]:
+                        try:
+                            await ws.send_text(msg)
+                        except Exception:
+                            connected_websockets[dev_id].remove(ws)
             except Exception as e:
                 import logging
                 logging.getLogger("dashboard").warning("poll error: %s", e)
