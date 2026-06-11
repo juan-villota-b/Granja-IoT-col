@@ -5,13 +5,17 @@
 #define NODE_TYPE "sensor_sed"
 #define FW_VERSION "5.2.0"
 
+#define ACCESS_TOKEN "4"
+#define TELEMETRY_KEY 'h'
+#define TELEMETRY_FMT 'u'
+
 #define TEMP_THRESHOLD_C_DEFAULT 0.5f
 #define HEARTBEAT_S_DEFAULT 300
 #define SAMPLE_INTERVAL_MS 30000
 #define TEMP_BASELINE 25.0f
 
-#define LAT_DEFAULT 5.028800f
-#define LNG_DEFAULT -75.471200f
+#define LAT_DEFAULT 5.028877f
+#define LNG_DEFAULT -75.472472f  /* ZONA-D: ~20m al sur */
 
 #define COAP_PORT 5683
 #define BRIDGE_IPV6 "fd29:c51e:a87a:e5e5:0:ff:fe00:fc00"

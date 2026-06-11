@@ -19,5 +19,12 @@ sensor_temp_t sensor_temp_leer(void)
     lectura.temperatura_c = TEMP_BASELINE
                           + 2.0f * sinf(2.0f * (float)M_PI * t_s / 1200.0f)
                           + ruido;
+    lectura.humedad_pct = 50 + (uint8_t)(10.0f * sinf(2.0f * (float)M_PI * t_s / 1800.0f))
+                         + (uint8_t)(((float)(esp_random() % 1000) / 1000.0f - 0.5f) * 5.0f);
+    if (lectura.humedad_pct > 100) lectura.humedad_pct = 100;
+    if (lectura.humedad_pct > 90) lectura.humedad_pct = 90;
+    if (lectura.humedad_pct < 30) lectura.humedad_pct = 30;
+    lectura.luz_lux = 500 + (uint16_t)(300.0f * sinf(2.0f * (float)M_PI * t_s / 3600.0f))
+                     + (uint16_t)(((float)(esp_random() % 1000) / 1000.0f - 0.5f) * 100.0f);
     return lectura;
 }

@@ -97,7 +97,7 @@ async def api_logout(request: Request):
 # ─── Devices API ────────────────────────────────────────────────────
 
 @app.get("/api/devices")
-async def api_devices(request: Request, gateway: str = "Gateway-asus"):
+async def api_devices(request: Request, gateway: str = "IoT-Gateway"):
     session_token = request.cookies.get("session_token")
     if not session_token:
         raise HTTPException(status_code=401, detail="No autenticado")
@@ -255,11 +255,11 @@ async def poll_and_broadcast():
                     if last_activity is not None:
                         extras["_lastActivityTime"] = last_activity
                     msg = json.dumps({"device_id": dev_id, **telemetry, **extras})
-                for ws in connected_websockets[dev_id][:]:
-                    try:
-                        await ws.send_text(msg)
-                    except Exception:
-                        connected_websockets[dev_id].remove(ws)
+                    for ws in connected_websockets[dev_id][:]:
+                        try:
+                            await ws.send_text(msg)
+                        except Exception:
+                            connected_websockets[dev_id].remove(ws)
             except Exception as e:
                 import logging
                 logging.getLogger("dashboard").warning("poll error: %s", e)
