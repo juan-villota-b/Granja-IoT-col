@@ -196,7 +196,7 @@ esp_err_t push_telemetry(sensor_temp_t *lectura, int8_t rssi, uint32_t uptime_s,
         coap_free_context(ctx);
 
         if (g_got_ack) {
-            ESP_LOGI(TAG, "Push exitoso intento %d", attempt + 1);
+            ESP_LOGI(TAG, "Push exitoso intento %d — T=%.1fC", attempt + 1, (double)lectura->temperatura_c);
             return ESP_OK;
         }
         ESP_LOGW(TAG, "Push intento %d/%d sin ACK", attempt + 1, max_retries);
