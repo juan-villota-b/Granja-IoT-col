@@ -252,6 +252,8 @@ function addDeviceMarker(dev) {
       telemRows += `<div class="popup-row"><span class="popup-label">🌡️ Temp</span><strong class="popup-value popup-temp">${App.esc(tel.temperature)} °C</strong></div>`;
     if (tel.humidity !== undefined && tel.humidity !== null)
       telemRows += `<div class="popup-row"><span class="popup-label">💧 Hum</span><strong class="popup-value popup-hum">${App.esc(tel.humidity)} %</strong></div>`;
+    if (tel.light !== undefined && tel.light !== null)
+      telemRows += `<div class="popup-row"><span class="popup-label">☀️ Luz</span><strong class="popup-value" style="color:#fbbf24">${App.esc(tel.light)} lux</strong></div>`;
     if (tel.battery !== undefined && tel.battery !== null)
       telemRows += `<div class="popup-row"><span class="popup-label">🔋 Batería</span><strong class="popup-value">${App.esc(tel.battery)} mV</strong></div>`;
     if (tel.rssi !== undefined && tel.rssi !== null)
@@ -400,6 +402,8 @@ function updateMarkerTelemetry(deviceId, telemetry) {
     telemRows += `<div class="popup-row"><span class="popup-label">🌡️ Temp</span><strong class="popup-value popup-temp">${App.esc(tel.temperature)} °C</strong></div>`;
   if (tel.humidity !== undefined && tel.humidity !== null)
     telemRows += `<div class="popup-row"><span class="popup-label">💧 Hum</span><strong class="popup-value popup-hum">${App.esc(tel.humidity)} %</strong></div>`;
+  if (tel.light !== undefined && tel.light !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">☀️ Luz</span><strong class="popup-value" style="color:#fbbf24">${App.esc(tel.light)} lux</strong></div>`;
   if (tel.battery !== undefined && tel.battery !== null)
     telemRows += `<div class="popup-row"><span class="popup-label">🔋 Batería</span><strong class="popup-value">${App.esc(tel.battery)} mV</strong></div>`;
   if (tel.rssi !== undefined && tel.rssi !== null)

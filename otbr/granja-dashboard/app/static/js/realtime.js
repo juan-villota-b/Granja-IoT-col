@@ -1,15 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════════
    Granja Dashboard · realtime.js
-   WebSocket + Chart.js historicos en tiempo real (ultimos 20 registros)
+   WebSocket + Chart.js en tiempo real — charts dinámicos por variable
    ═══════════════════════════════════════════════════════════════════ */
 
 let ws = null;
-let tempChart = null;
-let humChart = null;
+let sensorChart = null;
 let battChart = null;
 let rssiChart = null;
 const MAX_POINTS = 20;
-const _lastVals = { temp: {}, hum: {}, batt: {}, rssi: {} };
+const _lastVals = { sensor: {}, batt: {}, rssi: {} };
 let _reconnectTimer = null;
 let _currentDeviceId = null;
 
@@ -93,27 +92,33 @@ function connectWS(deviceId) {
   ws = new WebSocket(`${protocol}//${window.location.host}/ws/${deviceId}`);
   _currentDeviceId = deviceId;
 
+  const dev = App.state.devices.find(d => d.id === deviceId);
+  const tel = (dev && dev.telemetry) || {};
+  const sensorKey = App.getNodeSensorVar(tel);
+  const sv = sensorKey ? App.SENSOR_VARS[sensorKey] : null;
+
   ws.onmessage = event => {
     try {
       const data = JSON.parse(event.data);
       const now = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      addPoint(tempChart, 'temp', now, data.temperature);
-      addPoint(humChart, 'hum', now, data.humidity);
+
+      if (sv && data[sensorKey] !== undefined)
+        addPoint(sensorChart, 'sensor', now, data[sensorKey]);
       addPoint(battChart, 'batt', now, data.battery);
       addPoint(rssiChart, 'rssi', now, data.rssi);
 
       if (typeof updateMarkerTelemetry === 'function') updateMarkerTelemetry(deviceId, data);
 
-      const dev = App.state.devices.find(d => d.id === deviceId);
       if (dev) {
         if (!dev.telemetry) dev.telemetry = {};
         if (data.temperature !== undefined) dev.telemetry.temperature = data.temperature;
         if (data.humidity !== undefined) dev.telemetry.humidity = data.humidity;
+        if (data.light !== undefined) dev.telemetry.light = data.light;
         if (data.battery !== undefined) dev.telemetry.battery = data.battery;
         if (data.rssi !== undefined) dev.telemetry.rssi = data.rssi;
         if (data.uptime !== undefined) dev.telemetry.uptime = data.uptime;
-      if (data._ts !== undefined) dev.telemetry._ts = data._ts;
-      if (data._lastActivityTime !== undefined) dev.attributes.lastActivityTime = data._lastActivityTime;
+        if (data._ts !== undefined) dev.telemetry._ts = data._ts;
+        if (data._lastActivityTime !== undefined) dev.attributes.lastActivityTime = data._lastActivityTime;
         if (App.state.activeNodeId === deviceId) App.renderNodeInfo(dev);
       }
     } catch(e) { console.error('[ws] onmessage:', e); }
@@ -134,20 +139,28 @@ function scheduleReconnect() {
 
 function startRealtimeCharts(deviceId) {
   if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
-  if (!document.getElementById('chart-temp')) return;
   _currentDeviceId = deviceId;
 
   try {
-    if (tempChart) tempChart.destroy();
-    if (humChart) humChart.destroy();
+    if (sensorChart) sensorChart.destroy();
     if (battChart) battChart.destroy();
     if (rssiChart) rssiChart.destroy();
+    sensorChart = null;
+    battChart = null;
+    rssiChart = null;
   } catch(e) { console.error(e); }
 
-  tempChart = createHistoryChart('chart-temp', 'Temperatura', '#f59e0b');
-  humChart = createHistoryChart('chart-hum', 'Humedad', '#06b6d4');
-  battChart = createHistoryChart('chart-batt', 'Bateria', '#22c55e');
-  rssiChart = createHistoryChart('chart-rssi', 'RSSI', '#a78bfa');
+  const dev = App.state.devices.find(d => d.id === deviceId);
+  const tel = (dev && dev.telemetry) || {};
+  const sensorKey = App.getNodeSensorVar(tel);
+  const sv = sensorKey ? App.SENSOR_VARS[sensorKey] : null;
+
+  if (sv && document.getElementById('chart-sensor'))
+    sensorChart = createHistoryChart('chart-sensor', `${sv.icon} ${sv.label}`, sv.color);
+  if (document.getElementById('chart-batt'))
+    battChart = createHistoryChart('chart-batt', 'Batería', '#22c55e');
+  if (document.getElementById('chart-rssi'))
+    rssiChart = createHistoryChart('chart-rssi', 'RSSI', '#a78bfa');
 
   connectWS(deviceId);
 }

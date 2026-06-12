@@ -94,7 +94,7 @@ function updateHistSummary(data, variable) {
   const min = Math.min(...values).toFixed(1);
   const max = Math.max(...values).toFixed(1);
 
-  const unit = variable === 'temperature' ? '°C' : variable === 'humidity' ? '%' : 'mV';
+  const unit = variable === 'temperature' ? '°C' : variable === 'humidity' ? '%' : variable === 'light' ? 'lux' : 'mV';
 
   container.innerHTML = `
     <div class="summary-card"><div class="summary-label">Promedio</div><div class="summary-value">${avg} ${unit}</div></div>
@@ -118,8 +118,8 @@ function updateHistChart(data, variable, view) {
   }));
   const values = data.map(pt => pt.value);
 
-  const chartLabel = variable === 'temperature' ? 'Temperatura (°C)' : variable === 'humidity' ? 'Humedad (%)' : 'Batería (mV)';
-  const color = variable === 'temperature' ? '#f59e0b' : variable === 'humidity' ? '#06b6d4' : '#22c55e';
+  const chartLabel = variable === 'temperature' ? 'Temperatura (°C)' : variable === 'humidity' ? 'Humedad (%)' : variable === 'light' ? 'Luminosidad (lux)' : 'Batería (mV)';
+  const color = variable === 'temperature' ? '#f59e0b' : variable === 'humidity' ? '#06b6d4' : variable === 'light' ? '#fbbf24' : '#22c55e';
 
   histChart = new Chart(canvas, {
     type: 'line',

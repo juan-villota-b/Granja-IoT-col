@@ -246,7 +246,7 @@ async def poll_and_broadcast():
                     dev_id = dev.get("id", {}).get("id")
                     if not dev_id or dev_id not in connected_websockets:
                         continue
-                    telemetry = await tb.get_latest_telemetry(tb_token, dev_id, "temperature,humidity,battery,rssi,uptime")
+                    telemetry = await tb.get_latest_telemetry(tb_token, dev_id, "temperature,humidity,light,battery,rssi,uptime")
                     if not telemetry:
                         continue
                     attrs = await tb.get_device_attributes(tb_token, dev_id)

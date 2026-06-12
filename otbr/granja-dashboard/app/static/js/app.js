@@ -125,6 +125,31 @@ const App = (() => {
     const dev = state.devices.find(d => d.id === deviceId);
     if (!dev) return;
     state.activeNodeId = deviceId;
+
+    const tel = dev.telemetry || {};
+    const sensorVar = getNodeSensorVar(tel);
+    const sv = sensorVar ? SENSOR_VARS[sensorVar] : null;
+
+    const chartsContainer = document.getElementById('panel-charts');
+    if (chartsContainer) {
+      let html = '';
+      if (sv) {
+        html += `<div class="chart-container">
+          <h4><span style="color:${sv.color}">${sv.icon}</span> ${sv.label}</h4>
+          <canvas id="chart-sensor"></canvas>
+        </div>`;
+      }
+      html += `<div class="chart-container">
+        <h4>🔋 Batería</h4>
+        <canvas id="chart-batt"></canvas>
+      </div>
+      <div class="chart-container">
+        <h4>📡 RSSI</h4>
+        <canvas id="chart-rssi"></canvas>
+      </div>`;
+      chartsContainer.innerHTML = html;
+    }
+
     renderNodeInfo(dev);
     if (typeof startRealtimeCharts === 'function') startRealtimeCharts(deviceId);
     if (typeof updateMapHighlight === 'function') updateMapHighlight(deviceId);
@@ -138,6 +163,36 @@ const App = (() => {
     const attrs = dev.attributes || {};
     const bp = batteryPercent(tel.battery);
     const active = isDeviceActive(dev);
+    const sensorVar = getNodeSensorVar(tel);
+    const sv = sensorVar ? SENSOR_VARS[sensorVar] : null;
+
+    let cards = '';
+
+    if (sv) {
+      cards += `<div class="info-card">
+        <div class="info-label">${sv.icon} ${sv.label}</div>
+        <div class="info-value" style="color:${sv.color}">${esc(tel[sensorVar])} <small>${sv.unit}</small></div>
+      </div>`;
+    }
+
+    cards += `<div class="info-card">
+      <div class="info-label">🔋 Batería</div>
+      <div class="info-value" style="color:${batteryColor(bp)}">${bp !== null ? bp + '%' : '--'}</div>
+      <div class="info-sub">${esc(tel.battery)} mV</div>
+      <div class="battery-bar-wrap"><div class="battery-bar-fill" style="width:${bp !== null ? bp : 0}%;background:${batteryColor(bp)}"></div></div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">📡 RSSI</div>
+      <div class="info-value">${esc(tel.rssi)} <small>dBm</small></div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">⏱ Uptime</div>
+      <div class="info-value">${formatUptime(tel.uptime)}</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">📍 Zona</div>
+      <div class="info-value" style="font-size:1rem">${esc(attrs.zone || attrs.Zone)}</div>
+    </div>`;
 
     info.innerHTML = `
       <div class="node-info-header">
@@ -145,58 +200,27 @@ const App = (() => {
         <span class="node-info-title">${esc(dev.name)}</span>
         <span class="node-info-type">${esc(dev.type)}</span>
       </div>
-      <div class="node-info-grid">
-        <div class="info-card">
-          <div class="info-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
-            Temp
-          </div>
-          <div class="info-value" style="color:var(--accent)">${esc(tel.temperature)} <small>°C</small></div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Humedad
-          </div>
-          <div class="info-value" style="color:var(--water)">${esc(tel.humidity)} <small>%</small></div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
-            Batería
-          </div>
-          <div class="info-value" style="color:${batteryColor(bp)}">${bp !== null ? bp + '%' : '--'}</div>
-          <div class="info-sub">${esc(tel.battery)} mV</div>
-          <div class="battery-bar-wrap"><div class="battery-bar-fill" style="width:${bp !== null ? bp : 0}%;background:${batteryColor(bp)}"></div></div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 15.67a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
-            RSSI
-          </div>
-          <div class="info-value">${esc(tel.rssi)} <small>dBm</small></div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Uptime
-          </div>
-          <div class="info-value">${formatUptime(tel.uptime)}</div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Zona
-          </div>
-          <div class="info-value" style="font-size:1rem">${esc(attrs.zone || attrs.Zone)}</div>
-        </div>
-      </div>`;
+      <div class="node-info-grid">${cards}</div>`;
   }
+
+  function getNodeSensorVar(tel) {
+    if (tel.temperature !== undefined && tel.temperature !== null) return 'temperature';
+    if (tel.humidity !== undefined && tel.humidity !== null) return 'humidity';
+    if (tel.light !== undefined && tel.light !== null) return 'light';
+    return null;
+  }
+
+  const SENSOR_VARS = {
+    temperature: { label: 'Temperatura', unit: '°C', color: '#f59e0b', icon: '🌡️' },
+    humidity:    { label: 'Humedad', unit: '%', color: '#06b6d4', icon: '💧' },
+    light:       { label: 'Luminosidad', unit: 'lux', color: '#fbbf24', icon: '☀️' },
+  };
 
   function isDeviceActive(dev) {
     const tel = dev.telemetry || {};
     const hasData = (tel.temperature !== undefined && tel.temperature !== null)
                  || (tel.humidity !== undefined && tel.humidity !== null)
+                 || (tel.light !== undefined && tel.light !== null)
                  || (tel.battery !== undefined && tel.battery !== null);
     if (!hasData) return false;
 
@@ -293,20 +317,7 @@ const App = (() => {
                         Selecciona un nodo en el mapa<br>o en el selector para ver su telemetría
                     </p>
                 </div>
-                <div class="panel-charts" id="panel-charts">
-                    <div class="chart-container">
-                        <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg> Temperatura</h4>
-                        <canvas id="chart-temp"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> Humedad</h4>
-                        <canvas id="chart-hum"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg> Batería</h4>
-                        <canvas id="chart-batt"></canvas>
-                    </div>
-                </div>
+                <div class="panel-charts" id="panel-charts"></div>
             </div>
         </div>
     </div>`;
@@ -340,6 +351,7 @@ const App = (() => {
             <select id="hist-variable" class="customizable cs-sm">
                 <option value="temperature">Temperatura</option>
                 <option value="humidity">Humedad</option>
+                <option value="light">Luminosidad</option>
                 <option value="battery">Batería</option>
             </select>
             <div id="hist-custom-controls">
@@ -573,6 +585,8 @@ const App = (() => {
     formatUptime,
     batteryPercent,
     batteryColor,
+    getNodeSensorVar,
+    SENSOR_VARS,
     isDeviceActive,
     isGateway,
     loadDevices,
