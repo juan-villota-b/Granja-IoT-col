@@ -248,14 +248,10 @@ function addDeviceMarker(dev) {
       uptimeStr = `${h}h ${m}m`;
     }
     let telemRows = '';
-    if (tel.temperature !== undefined && tel.temperature !== null)
-      telemRows += `<div class="popup-row"><span class="popup-label">🌡️ Temp</span><strong class="popup-value popup-temp">${App.esc(tel.temperature)} °C</strong></div>`;
-    if (tel.humidity !== undefined && tel.humidity !== null)
-      telemRows += `<div class="popup-row"><span class="popup-label">💧 Hum</span><strong class="popup-value popup-hum">${App.esc(tel.humidity)} %</strong></div>`;
-    if (tel.light !== undefined && tel.light !== null)
-      telemRows += `<div class="popup-row"><span class="popup-label">☀️ Luz</span><strong class="popup-value" style="color:#fbbf24">${App.esc(tel.light)} lux</strong></div>`;
-    if (tel.battery !== undefined && tel.battery !== null)
-      telemRows += `<div class="popup-row"><span class="popup-label">🔋 Batería</span><strong class="popup-value">${App.esc(tel.battery)} mV</strong></div>`;
+    const sensorVar = App.getNodeSensorVar(tel);
+    const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
+    if (sv)
+      telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
     if (tel.rssi !== undefined && tel.rssi !== null)
       telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
     popupHtml = `<div class="node-popup">
@@ -398,14 +394,10 @@ function updateMarkerTelemetry(deviceId, telemetry) {
   const statusColor = active ? '#22c55e' : '#ef4444';
 
   let telemRows = '';
-  if (tel.temperature !== undefined && tel.temperature !== null)
-    telemRows += `<div class="popup-row"><span class="popup-label">🌡️ Temp</span><strong class="popup-value popup-temp">${App.esc(tel.temperature)} °C</strong></div>`;
-  if (tel.humidity !== undefined && tel.humidity !== null)
-    telemRows += `<div class="popup-row"><span class="popup-label">💧 Hum</span><strong class="popup-value popup-hum">${App.esc(tel.humidity)} %</strong></div>`;
-  if (tel.light !== undefined && tel.light !== null)
-    telemRows += `<div class="popup-row"><span class="popup-label">☀️ Luz</span><strong class="popup-value" style="color:#fbbf24">${App.esc(tel.light)} lux</strong></div>`;
-  if (tel.battery !== undefined && tel.battery !== null)
-    telemRows += `<div class="popup-row"><span class="popup-label">🔋 Batería</span><strong class="popup-value">${App.esc(tel.battery)} mV</strong></div>`;
+  const sensorVar = App.getNodeSensorVar(tel);
+  const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
+  if (sv)
+    telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
   if (tel.rssi !== undefined && tel.rssi !== null)
     telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
 
