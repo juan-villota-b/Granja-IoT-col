@@ -11,6 +11,7 @@ const MAX_POINTS = 20;
 const _lastVals = { sensor: {}, batt: {}, rssi: {} };
 let _reconnectTimer = null;
 let _currentDeviceId = null;
+let _knownSensorKey = null;
 
 function _cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -86,29 +87,46 @@ function createHistoryChart(canvasId, label, color) {
   });
 }
 
+function _ensureSensorChart(sensorKey) {
+  if (sensorChart) return;
+  if (!document.getElementById('chart-sensor')) return;
+  const sv = App.SENSOR_VARS[sensorKey];
+  if (!sv) return;
+  _knownSensorKey = sensorKey;
+  const header = document.querySelector('#chart-sensor').closest('.chart-container').querySelector('h4');
+  if (header) header.innerHTML = `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}`;
+  sensorChart = createHistoryChart('chart-sensor', `${sv.icon} ${sv.label}`, sv.color);
+}
+
+function _dataSensorKey(data) {
+  if (data.temperature !== undefined && data.temperature !== null) return 'temperature';
+  if (data.humidity !== undefined && data.humidity !== null) return 'humidity';
+  if (data.light !== undefined && data.light !== null) return 'light';
+  return null;
+}
+
 function connectWS(deviceId) {
   if (ws) { try { ws.close(); } catch(e) { console.error(e); } }
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(`${protocol}//${window.location.host}/ws/${deviceId}`);
   _currentDeviceId = deviceId;
 
-  const dev = App.state.devices.find(d => d.id === deviceId);
-  const tel = (dev && dev.telemetry) || {};
-  const sensorKey = App.getNodeSensorVar(tel);
-  const sv = sensorKey ? App.SENSOR_VARS[sensorKey] : null;
-
   ws.onmessage = event => {
     try {
       const data = JSON.parse(event.data);
       const now = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-      if (sv && data[sensorKey] !== undefined)
-        addPoint(sensorChart, 'sensor', now, data[sensorKey]);
+      const sk = _dataSensorKey(data);
+      if (sk) {
+        _ensureSensorChart(sk);
+        addPoint(sensorChart, 'sensor', now, data[sk]);
+      }
       addPoint(battChart, 'batt', now, data.battery);
       addPoint(rssiChart, 'rssi', now, data.rssi);
 
       if (typeof updateMarkerTelemetry === 'function') updateMarkerTelemetry(deviceId, data);
 
+      const dev = App.state.devices.find(d => d.id === deviceId);
       if (dev) {
         if (!dev.telemetry) dev.telemetry = {};
         if (data.temperature !== undefined) dev.telemetry.temperature = data.temperature;
@@ -140,6 +158,7 @@ function scheduleReconnect() {
 function startRealtimeCharts(deviceId) {
   if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
   _currentDeviceId = deviceId;
+  _knownSensorKey = null;
 
   try {
     if (sensorChart) sensorChart.destroy();
@@ -150,13 +169,6 @@ function startRealtimeCharts(deviceId) {
     rssiChart = null;
   } catch(e) { console.error(e); }
 
-  const dev = App.state.devices.find(d => d.id === deviceId);
-  const tel = (dev && dev.telemetry) || {};
-  const sensorKey = App.getNodeSensorVar(tel);
-  const sv = sensorKey ? App.SENSOR_VARS[sensorKey] : null;
-
-  if (sv && document.getElementById('chart-sensor'))
-    sensorChart = createHistoryChart('chart-sensor', `${sv.icon} ${sv.label}`, sv.color);
   if (document.getElementById('chart-batt'))
     battChart = createHistoryChart('chart-batt', 'Batería', '#22c55e');
   if (document.getElementById('chart-rssi'))

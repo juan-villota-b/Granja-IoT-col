@@ -132,22 +132,19 @@ const App = (() => {
 
     const chartsContainer = document.getElementById('panel-charts');
     if (chartsContainer) {
-      let html = '';
-      if (sv) {
-        html += `<div class="chart-container">
-          <h4><span style="color:${sv.color}">${sv.icon}</span> ${sv.label}</h4>
+      chartsContainer.innerHTML = `
+        <div class="chart-container">
+          <h4>${sv ? `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}` : '🌱 Sensor'}</h4>
           <canvas id="chart-sensor"></canvas>
+        </div>
+        <div class="chart-container">
+          <h4>🔋 Batería</h4>
+          <canvas id="chart-batt"></canvas>
+        </div>
+        <div class="chart-container">
+          <h4>📡 RSSI</h4>
+          <canvas id="chart-rssi"></canvas>
         </div>`;
-      }
-      html += `<div class="chart-container">
-        <h4>🔋 Batería</h4>
-        <canvas id="chart-batt"></canvas>
-      </div>
-      <div class="chart-container">
-        <h4>📡 RSSI</h4>
-        <canvas id="chart-rssi"></canvas>
-      </div>`;
-      chartsContainer.innerHTML = html;
     }
 
     renderNodeInfo(dev);
