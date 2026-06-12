@@ -133,15 +133,11 @@ const App = (() => {
     const chartsContainer = document.getElementById('panel-charts');
     if (chartsContainer) {
       chartsContainer.innerHTML = `
-        <div class="chart-container">
+        <div class="chart-container chart-primary">
           <h4>${sv ? `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}` : '🌱 Sensor'}</h4>
           <canvas id="chart-sensor"></canvas>
         </div>
-        <div class="chart-container">
-          <h4>🔋 Batería</h4>
-          <canvas id="chart-batt"></canvas>
-        </div>
-        <div class="chart-container">
+        <div class="chart-container chart-rssi">
           <h4>📡 RSSI</h4>
           <canvas id="chart-rssi"></canvas>
         </div>`;
@@ -158,7 +154,6 @@ const App = (() => {
     if (!info) return;
     const tel = dev.telemetry || {};
     const attrs = dev.attributes || {};
-    const bp = batteryPercent(tel.battery);
     const active = isDeviceActive(dev);
     const sensorVar = getNodeSensorVar(tel);
     const sv = sensorVar ? SENSOR_VARS[sensorVar] : null;
@@ -166,29 +161,15 @@ const App = (() => {
     let cards = '';
 
     if (sv) {
-      cards += `<div class="info-card">
+      cards += `<div class="info-card info-card-primary">
         <div class="info-label">${sv.icon} ${sv.label}</div>
         <div class="info-value" style="color:${sv.color}">${esc(tel[sensorVar])} <small>${sv.unit}</small></div>
       </div>`;
     }
 
-    cards += `<div class="info-card">
-      <div class="info-label">🔋 Batería</div>
-      <div class="info-value" style="color:${batteryColor(bp)}">${bp !== null ? bp + '%' : '--'}</div>
-      <div class="info-sub">${esc(tel.battery)} mV</div>
-      <div class="battery-bar-wrap"><div class="battery-bar-fill" style="width:${bp !== null ? bp : 0}%;background:${batteryColor(bp)}"></div></div>
-    </div>
-    <div class="info-card">
+    cards += `<div class="info-card info-card-rssi">
       <div class="info-label">📡 RSSI</div>
       <div class="info-value">${esc(tel.rssi)} <small>dBm</small></div>
-    </div>
-    <div class="info-card">
-      <div class="info-label">⏱ Uptime</div>
-      <div class="info-value">${formatUptime(tel.uptime)}</div>
-    </div>
-    <div class="info-card">
-      <div class="info-label">📍 Zona</div>
-      <div class="info-value" style="font-size:1rem">${esc(attrs.zone || attrs.Zone)}</div>
     </div>`;
 
     info.innerHTML = `
@@ -197,7 +178,7 @@ const App = (() => {
         <span class="node-info-title">${esc(dev.name)}</span>
         <span class="node-info-type">${esc(dev.type)}</span>
       </div>
-      <div class="node-info-grid">${cards}</div>`;
+      <div class="node-info-grid two-card">${cards}</div>`;
   }
 
   function getNodeSensorVar(tel) {

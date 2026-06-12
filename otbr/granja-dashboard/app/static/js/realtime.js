@@ -1,17 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════
    Granja Dashboard · realtime.js
-   WebSocket + Chart.js en tiempo real — charts dinámicos por variable
+   WebSocket + Chart.js en tiempo real — solo sensor + RSSI
    ═══════════════════════════════════════════════════════════════════ */
 
 let ws = null;
 let sensorChart = null;
-let battChart = null;
 let rssiChart = null;
 const MAX_POINTS = 20;
-const _lastVals = { sensor: {}, batt: {}, rssi: {} };
+const _lastVals = { sensor: {}, rssi: {} };
 let _reconnectTimer = null;
 let _currentDeviceId = null;
-let _knownSensorKey = null;
 
 function _cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -92,7 +90,6 @@ function _ensureSensorChart(sensorKey) {
   if (!document.getElementById('chart-sensor')) return;
   const sv = App.SENSOR_VARS[sensorKey];
   if (!sv) return;
-  _knownSensorKey = sensorKey;
   const header = document.querySelector('#chart-sensor').closest('.chart-container').querySelector('h4');
   if (header) header.innerHTML = `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}`;
   sensorChart = createHistoryChart('chart-sensor', `${sv.icon} ${sv.label}`, sv.color);
@@ -121,7 +118,6 @@ function connectWS(deviceId) {
         _ensureSensorChart(sk);
         addPoint(sensorChart, 'sensor', now, data[sk]);
       }
-      addPoint(battChart, 'batt', now, data.battery);
       addPoint(rssiChart, 'rssi', now, data.rssi);
 
       if (typeof updateMarkerTelemetry === 'function') updateMarkerTelemetry(deviceId, data);
@@ -132,9 +128,7 @@ function connectWS(deviceId) {
         if (data.temperature !== undefined) dev.telemetry.temperature = data.temperature;
         if (data.humidity !== undefined) dev.telemetry.humidity = data.humidity;
         if (data.light !== undefined) dev.telemetry.light = data.light;
-        if (data.battery !== undefined) dev.telemetry.battery = data.battery;
         if (data.rssi !== undefined) dev.telemetry.rssi = data.rssi;
-        if (data.uptime !== undefined) dev.telemetry.uptime = data.uptime;
         if (data._ts !== undefined) dev.telemetry._ts = data._ts;
         if (data._lastActivityTime !== undefined) dev.attributes.lastActivityTime = data._lastActivityTime;
         if (App.state.activeNodeId === deviceId) App.renderNodeInfo(dev);
@@ -158,19 +152,14 @@ function scheduleReconnect() {
 function startRealtimeCharts(deviceId) {
   if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
   _currentDeviceId = deviceId;
-  _knownSensorKey = null;
 
   try {
     if (sensorChart) sensorChart.destroy();
-    if (battChart) battChart.destroy();
     if (rssiChart) rssiChart.destroy();
     sensorChart = null;
-    battChart = null;
     rssiChart = null;
   } catch(e) { console.error(e); }
 
-  if (document.getElementById('chart-batt'))
-    battChart = createHistoryChart('chart-batt', 'Batería', '#22c55e');
   if (document.getElementById('chart-rssi'))
     rssiChart = createHistoryChart('chart-rssi', 'RSSI', '#a78bfa');
 

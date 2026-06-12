@@ -591,6 +591,15 @@ input, select { font-family: inherit; font-size: inherit; }
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+.node-info-grid.two-card {
+  grid-template-columns: 1fr 1fr;
+}
+.node-info-grid.two-card .info-card-primary .info-value {
+  font-size: 1.8rem;
+}
+.node-info-grid.two-card .info-card-rssi .info-value {
+  font-size: 1.3rem;
+}
 
 .info-card {
   background: var(--card);
@@ -658,6 +667,8 @@ input, select { font-family: inherit; font-size: inherit; }
   height: 180px;
   flex-shrink: 0;
 }
+.chart-primary { height: 220px; }
+.chart-rssi { height: 140px; }
 
 .chart-container h4 {
   font-size: 0.72rem;
