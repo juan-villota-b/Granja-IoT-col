@@ -670,6 +670,26 @@ input, select { font-family: inherit; font-size: inherit; }
 .chart-primary { height: 220px; }
 .chart-rssi { height: 140px; }
 
+.chart-period-bar {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px;
+  margin-bottom: 4px;
+}
+.chart-period-tab {
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.chart-period-tab:hover { border-color: var(--primary); color: var(--text); }
+.chart-period-tab.active { background: var(--primary); color: #1a2e05; border-color: var(--primary); }
+
 .chart-container h4 {
   font-size: 0.72rem;
   color: var(--text-muted);

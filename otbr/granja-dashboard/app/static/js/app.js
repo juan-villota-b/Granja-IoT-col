@@ -124,10 +124,12 @@ const App = (() => {
   }
 
   // ── Selección de nodo ────────────────────────────────────────────
-  function selectNode(deviceId) {
+  let _chartPeriod = '1h';
+  function selectNode(deviceId, period) {
     const dev = state.devices.find(d => d.id === deviceId);
     if (!dev) return;
     state.activeNodeId = deviceId;
+    if (period) _chartPeriod = period;
 
     const tel = dev.telemetry || {};
     const sensorVar = getNodeSensorVar(tel, deviceId);
@@ -135,7 +137,11 @@ const App = (() => {
 
     const chartsContainer = document.getElementById('panel-charts');
     if (chartsContainer) {
+      const periodTabs = ['1h','6h','24h'].map(p =>
+        `<button class="chart-period-tab${p === _chartPeriod ? ' active' : ''}" data-period="${p}">${p}</button>`
+      ).join('');
       chartsContainer.innerHTML = `
+        <div class="chart-period-bar">${periodTabs}</div>
         <div class="chart-container chart-primary">
           <h4>${sv ? `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}` : '🌱 Sensor'}</h4>
           <canvas id="chart-sensor"></canvas>
@@ -144,10 +150,16 @@ const App = (() => {
           <h4>📡 RSSI</h4>
           <canvas id="chart-rssi"></canvas>
         </div>`;
+      chartsContainer.querySelectorAll('.chart-period-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const p = tab.dataset.period;
+          selectNode(deviceId, p);
+        });
+      });
     }
 
     renderNodeInfo(dev);
-    if (typeof startRealtimeCharts === 'function') startRealtimeCharts(deviceId);
+    if (typeof startRealtimeCharts === 'function') startRealtimeCharts(deviceId, _chartPeriod);
     if (typeof updateMapHighlight === 'function') updateMapHighlight(deviceId);
     document.getElementById('node-selector').value = deviceId;
   }
