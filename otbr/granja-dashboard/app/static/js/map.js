@@ -110,7 +110,7 @@ function initMap(devices) {
   window._mapRefreshInterval = setInterval(async () => {
     await refreshDeviceTimestamps();
     refreshAllMarkers();
-  }, 15000);
+  }, 5000);
 
   // Recuperar estado al volver a la pestaña
   document.removeEventListener('visibilitychange', _onVisibilityChange);
@@ -429,28 +429,27 @@ function refreshAllMarkers() {
     const marker = markers[dev.id];
     if (!marker || marker.isGateway) return;
     const active = App.isDeviceActive(dev);
-    if (active !== marker._active) {
-      marker._active = active;
+    marker._active = active;
     const iconColor = !active ? '#6b7280'
       : marker._isValve ? '#ef4444'
       : marker._isSensor ? '#22c55e'
       : '#3b82f6';
-      const opacity = active ? '1' : '0.7';
-      const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
-      const size = 18;
-      marker.setIcon(L.divIcon({
-        className: '',
-        html: `<div style="width:${size}px;height:${size}px;background:${iconColor};border:2.5px solid ${active ? 'white' : '#9ca3af'};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
-      }));
-    }
+    const opacity = active ? '1' : '0.7';
+    const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
+    const size = 18;
+    marker.setIcon(L.divIcon({
+      className: '',
+      html: `<div style="width:${size}px;height:${size}px;background:${iconColor};border:2.5px solid ${active ? 'white' : '#9ca3af'};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    }));
+    refreshMarkerPopup(dev.id);
   });
   drawConnections();
   updateStatusBar(App.state.devices);
 }
 
-// Refrescar timestamps de actividad cada 15s sin reinit el mapa
+// Refrescar datos de todos los nodos cada 5s sin reinit el mapa
 async function refreshDeviceTimestamps() {
   try {
     const res = await fetch('/api/devices', { credentials: 'include' });
@@ -462,14 +461,53 @@ async function refreshDeviceTimestamps() {
     fresh.forEach(fd => {
       const existing = App.state.devices.find(d => d.id === fd.id);
       if (!existing) return;
-      if (fd.telemetry && fd.telemetry._ts) {
+      if (fd.telemetry) {
         if (!existing.telemetry) existing.telemetry = {};
-        existing.telemetry._ts = fd.telemetry._ts;
+        ['temperature','humidity','light','rssi','uptime','battery','_ts'].forEach(k => {
+          if (fd.telemetry[k] !== undefined) existing.telemetry[k] = fd.telemetry[k];
+        });
       }
-      if (fd.attributes && fd.attributes.lastActivityTime) {
+      if (fd.attributes) {
         if (!existing.attributes) existing.attributes = {};
-        existing.attributes.lastActivityTime = fd.attributes.lastActivityTime;
+        ['lastActivityTime','zone','lat','lng'].forEach(k => {
+          if (fd.attributes[k] !== undefined) existing.attributes[k] = fd.attributes[k];
+        });
       }
     });
   } catch(e) { console.warn('[ts]', e.message || e); }
+}
+
+function refreshMarkerPopup(deviceId) {
+  const marker = markers[deviceId];
+  if (!marker || marker.isGateway) return;
+  const dev = (App.state.devices || []).find(d => d.id === deviceId);
+  if (!dev) return;
+  const tel = dev.telemetry || {};
+  const active = App.isDeviceActive(dev);
+  const uptimeStr = typeof formatUptime === 'function' ? formatUptime(tel.uptime) : (tel.uptime || '--');
+  const statusIcon = active ? '🟢' : '🔴';
+  const statusText = active ? 'Activo' : 'Inactivo';
+  const statusColor = active ? '#22c55e' : '#ef4444';
+  const sensorVar = App.getNodeSensorVar(tel, deviceId);
+  const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
+  let telemRows = '';
+  if (sv)
+    telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
+  if (tel.rssi !== undefined && tel.rssi !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
+  const html = `<div class="node-popup">
+    <div class="popup-header">
+      <div class="popup-status-dot" style="background:${statusColor}"></div>
+      <strong class="popup-title">${App.esc(marker._name)}</strong>
+      <span class="popup-status" style="color:${statusColor}">${statusText}</span>
+    </div>
+    <div class="popup-divider"></div>
+    ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
+    <div class="popup-divider"></div>
+    <div class="popup-footer">
+      <span class="popup-label">⏱ Uptime</span>
+      <strong class="popup-value">${uptimeStr}</strong>
+    </div>
+  </div>`;
+  marker.setPopupContent(html);
 }
