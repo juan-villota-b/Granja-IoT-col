@@ -12,6 +12,9 @@ const App = (() => {
     currentPage: 'dashboard',
   };
 
+  // Rastrea la variable real de cada nodo segun el ultimo dato vivo
+  const _liveVar = {}; // deviceId → 'temperature'|'humidity'|'light'
+
   // ── Sanitización ─────────────────────────────────────────────────
   function esc(str) {
     if (str === null || str === undefined) return '';
@@ -127,7 +130,7 @@ const App = (() => {
     state.activeNodeId = deviceId;
 
     const tel = dev.telemetry || {};
-    const sensorVar = getNodeSensorVar(tel);
+    const sensorVar = getNodeSensorVar(tel, deviceId);
     const sv = sensorVar ? SENSOR_VARS[sensorVar] : null;
 
     const chartsContainer = document.getElementById('panel-charts');
@@ -155,7 +158,7 @@ const App = (() => {
     const tel = dev.telemetry || {};
     const attrs = dev.attributes || {};
     const active = isDeviceActive(dev);
-    const sensorVar = getNodeSensorVar(tel);
+    const sensorVar = getNodeSensorVar(tel, dev.id);
     const sv = sensorVar ? SENSOR_VARS[sensorVar] : null;
 
     let cards = '';
@@ -181,11 +184,16 @@ const App = (() => {
       <div class="node-info-grid two-card">${cards}</div>`;
   }
 
-  function getNodeSensorVar(tel) {
+  function getNodeSensorVar(tel, deviceId) {
+    if (deviceId && _liveVar[deviceId]) return _liveVar[deviceId];
     if (tel.temperature !== undefined && tel.temperature !== null) return 'temperature';
     if (tel.humidity !== undefined && tel.humidity !== null) return 'humidity';
     if (tel.light !== undefined && tel.light !== null) return 'light';
     return null;
+  }
+
+  function setLiveVar(deviceId, sensorKey) {
+    if (sensorKey) _liveVar[deviceId] = sensorKey;
   }
 
   const SENSOR_VARS = {
@@ -564,6 +572,7 @@ const App = (() => {
     batteryPercent,
     batteryColor,
     getNodeSensorVar,
+    setLiveVar,
     SENSOR_VARS,
     isDeviceActive,
     isGateway,

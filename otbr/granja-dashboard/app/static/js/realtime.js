@@ -115,6 +115,7 @@ function connectWS(deviceId) {
 
       const sk = _dataSensorKey(data);
       if (sk) {
+        App.setLiveVar(deviceId, sk);
         _ensureSensorChart(sk);
         addPoint(sensorChart, 'sensor', now, data[sk]);
       }

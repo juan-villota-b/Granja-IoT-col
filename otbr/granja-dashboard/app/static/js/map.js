@@ -248,7 +248,7 @@ function addDeviceMarker(dev) {
       uptimeStr = `${h}h ${m}m`;
     }
     let telemRows = '';
-    const sensorVar = App.getNodeSensorVar(tel);
+    const sensorVar = App.getNodeSensorVar(tel, dev.id);
     const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
     if (sv)
       telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
@@ -394,7 +394,7 @@ function updateMarkerTelemetry(deviceId, telemetry) {
   const statusColor = active ? '#22c55e' : '#ef4444';
 
   let telemRows = '';
-  const sensorVar = App.getNodeSensorVar(tel);
+  const sensorVar = App.getNodeSensorVar(tel, deviceId);
   const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
   if (sv)
     telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
