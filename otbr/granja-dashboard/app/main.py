@@ -13,6 +13,9 @@ from app.config import TB_BASE_URL, APP_PORT
 from app.tb_client import TBClient
 from app.auth import create_session_token, get_current_user
 
+def clean_name(name: str) -> str:
+    return name.split("_")[0] if "_" in name else name
+
 app = FastAPI(title="Granja Dashboard")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -135,7 +138,7 @@ async def api_devices(request: Request, gateway: str = "IoT-Gateway"):
             telemetry = {}
         result.append({
             "id": dev_id,
-            "name": name,
+            "name": clean_name(name),
             "type": devtype,
             "label": label,
             "attributes": attrs,

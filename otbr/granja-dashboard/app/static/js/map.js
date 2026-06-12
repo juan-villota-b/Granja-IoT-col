@@ -12,7 +12,7 @@ let connectionLines = null;
 const CENTER_LAT = 5.0298;
 const CENTER_LNG = -75.4715;
 const SCALE = 0.002;
-const ZOOM_THRESHOLD = 17;
+const ZOOM_THRESHOLD = 15;
 const INITIAL_ZOOM = 12;
 
 let _nodeCoords = {};
@@ -73,7 +73,9 @@ function initMap(devices) {
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxNativeZoom: 19,
-    maxZoom: 20,
+    maxZoom: 22,
+    subdomains: ['a', 'b', 'c'],
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
   }).addTo(map);
 
   gatewayGroup = L.layerGroup().addTo(map);
@@ -245,18 +247,29 @@ function addDeviceMarker(dev) {
       const m = Math.floor((uptime % 3600) / 60);
       uptimeStr = `${h}h ${m}m`;
     }
-    popupHtml = `<div style="min-width:170px;line-height:1.8">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <strong style="font-size:1rem">${App.esc(dev.name)}</strong>
-        <span style="font-size:0.78rem;color:${statusColor}">${statusIcon} ${statusText}</span>
+    let telemRows = '';
+    if (tel.temperature !== undefined && tel.temperature !== null)
+      telemRows += `<div class="popup-row"><span class="popup-label">🌡️ Temp</span><strong class="popup-value popup-temp">${App.esc(tel.temperature)} °C</strong></div>`;
+    if (tel.humidity !== undefined && tel.humidity !== null)
+      telemRows += `<div class="popup-row"><span class="popup-label">💧 Hum</span><strong class="popup-value popup-hum">${App.esc(tel.humidity)} %</strong></div>`;
+    if (tel.battery !== undefined && tel.battery !== null)
+      telemRows += `<div class="popup-row"><span class="popup-label">🔋 Batería</span><strong class="popup-value">${App.esc(tel.battery)} mV</strong></div>`;
+    if (tel.rssi !== undefined && tel.rssi !== null)
+      telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
+    popupHtml = `<div class="node-popup">
+      <div class="popup-header">
+        <div class="popup-status-dot" style="background:${statusColor}"></div>
+        <strong class="popup-title">${App.esc(dev.name)}</strong>
+        <span class="popup-status" style="color:${statusColor}">${statusText}</span>
       </div>
-      <div style="margin-bottom:6px;color:var(--text-muted);font-size:0.75rem">${App.esc(zone)}</div>
-      <hr style="border-color:var(--border);margin:8px 0" />
-      <div>Temperatura: <strong>${App.esc(tel.temperature)} °C</strong></div>
-      <div>Humedad: <strong>${App.esc(tel.humidity)} %</strong></div>
-      <div>Batería: <strong>${App.esc(tel.battery)} mV</strong></div>
-      <div>RSSI: <strong>${App.esc(tel.rssi)} dBm</strong></div>
-      <div>Uptime: <strong>${uptimeStr}</strong></div>
+      ${zone ? `<div class="popup-zone">📍 ${App.esc(zone)}</div>` : ''}
+      <div class="popup-divider"></div>
+      ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
+      <div class="popup-divider"></div>
+      <div class="popup-footer">
+        <span class="popup-label">⏱ Uptime</span>
+        <strong class="popup-value">${uptimeStr}</strong>
+      </div>
     </div>`;
   }
   marker.bindPopup(popupHtml);
@@ -382,18 +395,30 @@ function updateMarkerTelemetry(deviceId, telemetry) {
   const statusText = active ? 'Activo' : 'Inactivo';
   const statusColor = active ? '#22c55e' : '#ef4444';
 
-  const html = `<div style="min-width:170px;line-height:1.8">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-      <strong style="font-size:1rem">${App.esc(marker._name)}</strong>
-      <span style="font-size:0.78rem;color:${statusColor}">${statusIcon} ${statusText}</span>
+  let telemRows = '';
+  if (tel.temperature !== undefined && tel.temperature !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">🌡️ Temp</span><strong class="popup-value popup-temp">${App.esc(tel.temperature)} °C</strong></div>`;
+  if (tel.humidity !== undefined && tel.humidity !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">💧 Hum</span><strong class="popup-value popup-hum">${App.esc(tel.humidity)} %</strong></div>`;
+  if (tel.battery !== undefined && tel.battery !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">🔋 Batería</span><strong class="popup-value">${App.esc(tel.battery)} mV</strong></div>`;
+  if (tel.rssi !== undefined && tel.rssi !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
+
+  const html = `<div class="node-popup">
+    <div class="popup-header">
+      <div class="popup-status-dot" style="background:${statusColor}"></div>
+      <strong class="popup-title">${App.esc(marker._name)}</strong>
+      <span class="popup-status" style="color:${statusColor}">${statusText}</span>
     </div>
-    ${marker._zone ? `<div style="margin-bottom:6px;color:var(--text-muted);font-size:0.75rem">${App.esc(marker._zone)}</div>` : ''}
-    <hr style="border-color:var(--border);margin:8px 0" />
-    <div>Temperatura: <strong>${App.esc(tel.temperature)} °C</strong></div>
-    <div>Humedad: <strong>${App.esc(tel.humidity)} %</strong></div>
-    <div>Batería: <strong>${App.esc(tel.battery)} mV</strong></div>
-    <div>RSSI: <strong>${App.esc(tel.rssi)} dBm</strong></div>
-    <div>Uptime: <strong>${uptimeStr}</strong></div>
+    ${marker._zone ? `<div class="popup-zone">📍 ${App.esc(marker._zone)}</div>` : ''}
+    <div class="popup-divider"></div>
+    ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
+    <div class="popup-divider"></div>
+    <div class="popup-footer">
+      <span class="popup-label">⏱ Uptime</span>
+      <strong class="popup-value">${uptimeStr}</strong>
+    </div>
   </div>`;
   marker.setPopupContent(html);
 

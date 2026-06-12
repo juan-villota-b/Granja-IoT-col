@@ -195,7 +195,9 @@ const App = (() => {
 
   function isDeviceActive(dev) {
     const tel = dev.telemetry || {};
-    const hasData = tel.temperature !== undefined && tel.temperature !== null;
+    const hasData = (tel.temperature !== undefined && tel.temperature !== null)
+                 || (tel.humidity !== undefined && tel.humidity !== null)
+                 || (tel.battery !== undefined && tel.battery !== null);
     if (!hasData) return false;
 
     const attrs = dev.attributes || {};

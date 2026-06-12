@@ -10,8 +10,8 @@
 #define SAMPLE_INTERVAL_MS 30000
 #define HUM_BASELINE 50.0f
 
-#define LAT_DEFAULT 5.029056f
-#define LNG_DEFAULT -75.472293f  /* ZONA-C: ~20m al este */
+#define LAT_DEFAULT 5.029091f
+#define LNG_DEFAULT -75.472636f  /* ZONA-C */
 
 #define COAP_PORT 5683
 #define BRIDGE_IPV6 "fd29:c51e:a87a:e5e5:0:ff:fe00:fc00"
