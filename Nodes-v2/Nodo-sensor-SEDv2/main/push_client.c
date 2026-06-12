@@ -16,7 +16,7 @@ static const char *TAG = "push";
 
 static uint32_t f32_to_u32(float f) { uint32_t x; memcpy(&x, &f, sizeof(x)); return x; }
 
-static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, uint32_t up)
+static size_t encode_cbor_first(uint8_t out[80], sensor_data_t *d, int8_t rssi, uint32_t up)
 {
     size_t p = 0;
     out[p++] = 0xA6;
@@ -32,9 +32,9 @@ static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, 
     size_t vl = strlen(FW_VERSION);
     out[p++] = (uint8_t)(0x60 | vl);
     memcpy(out + p, FW_VERSION, vl); p += vl;
-    out[p++] = 0x61; out[p++] = 't';
+    out[p++] = 0x61; out[p++] = 'l';
     out[p++] = 0xF9;
-    uint32_t x = f32_to_u32(t->temperatura_c);
+    uint32_t x = f32_to_u32(d->porcentaje_luz);
     uint16_t sign = (x >> 16) & 0x8000;
     int16_t exp = ((x >> 23) & 0xFF) - 127 + 15;
     uint16_t mant = (x >> 13) & 0x3FF;
@@ -55,7 +55,7 @@ static size_t encode_cbor_first(uint8_t out[80], sensor_temp_t *t, int8_t rssi, 
     return p;
 }
 
-static size_t encode_cbor_push(uint8_t out[48], sensor_temp_t *t, int8_t rssi, uint32_t up)
+static size_t encode_cbor_push(uint8_t out[48], sensor_data_t *d, int8_t rssi, uint32_t up)
 {
     size_t p = 0;
     out[p++] = 0xA4;
@@ -63,9 +63,9 @@ static size_t encode_cbor_push(uint8_t out[48], sensor_temp_t *t, int8_t rssi, u
     size_t nl = strlen(NODE_ID);
     out[p++] = (uint8_t)(0x60 | nl);
     memcpy(out + p, NODE_ID, nl); p += nl;
-    out[p++] = 0x61; out[p++] = 't';
+    out[p++] = 0x61; out[p++] = 'l';
     out[p++] = 0xF9;
-    uint32_t x = f32_to_u32(t->temperatura_c);
+    uint32_t x = f32_to_u32(d->porcentaje_luz);
     uint16_t sign = (x >> 16) & 0x8000;
     int16_t exp = ((x >> 23) & 0xFF) - 127 + 15;
     uint16_t mant = (x >> 13) & 0x3FF;
@@ -114,7 +114,7 @@ static coap_response_t push_handler(coap_session_t *s, const coap_pdu_t *sent,
     return COAP_RESPONSE_OK;
 }
 
-esp_err_t push_telemetry(sensor_temp_t *lectura, int8_t rssi, uint32_t uptime_s, bool is_first)
+esp_err_t push_telemetry(sensor_data_t *lectura, int8_t rssi, uint32_t uptime_s, bool is_first)
 {
     if (rssi == 0) rssi = get_rssi();
 
