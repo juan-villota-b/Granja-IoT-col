@@ -6,6 +6,7 @@
 let ws = null;
 let sensorChart = null;
 let rssiChart = null;
+let _chartKey = null;       // 'temperature'|'humidity'|'light' detectado
 const MAX_LIVE = 80;
 const _lastVals = { sensor: {}, rssi: {} };
 let _reconnectTimer = null;
@@ -30,10 +31,11 @@ function _fmtDateTime(ts) {
   return new Date(ts).toLocaleString('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function _sensorKeyFromId(deviceId) {
-  const dev = App.state.devices.find(d => d.id === deviceId);
-  if (!dev) return null;
-  return App.getNodeSensorVar((dev.telemetry || {}), deviceId);
+function _updateSensorHeader(sensorKey) {
+  const sv = App.SENSOR_VARS[sensorKey];
+  if (!sv) return;
+  const header = document.querySelector('#chart-sensor')?.closest('.chart-container')?.querySelector('h4');
+  if (header) header.innerHTML = `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}`;
 }
 
 function createChart(canvasId, label, color, isRssi) {
@@ -77,10 +79,23 @@ async function fetchHistory(deviceId, period, sensorKey) {
     const res = await App.api(url);
     if (!res) return { sensor: [], rssi: [] };
     const data = await res.json();
+
+    // Detectar que variable tiene datos reales (el nodo puede no ser temperature)
+    let detectedKey = null;
+    for (const k of ['temperature', 'humidity', 'light']) {
+      if (data[k] && data[k].length > 0) { detectedKey = k; break; }
+    }
+    if (detectedKey && detectedKey !== sensorKey) {
+      sensorKey = detectedKey;
+      _chartKey = detectedKey;
+      App.setLiveVar(deviceId, detectedKey);
+      _updateSensorHeader(detectedKey);
+    }
+
     const sensorPts = (data[sensorKey] || []).map(p => ({ ts: p.ts, v: parseFloat(p.value) })).filter(p => !isNaN(p.v));
     const rssiPts = (data.rssi || []).map(p => ({ ts: p.ts, v: parseFloat(p.value) })).filter(p => !isNaN(p.v));
-    return { sensor: sensorPts, rssi: rssiPts };
-  } catch(e) { console.error('[hist]', e); return { sensor: [], rssi: [] }; }
+    return { sensor: sensorPts, rssi: rssiPts, detectedKey };
+  } catch(e) { console.error('[hist]', e); return { sensor: [], rssi: [], detectedKey: null }; }
 }
 
 function loadHistoryIntoChart(chart, points) {
@@ -110,16 +125,6 @@ function appendLive(chart, key, ts, value) {
   chart.update('none');
 }
 
-function _ensureSensorChart(sensorKey) {
-  if (sensorChart) return;
-  if (!document.getElementById('chart-sensor')) return;
-  const sv = App.SENSOR_VARS[sensorKey];
-  if (!sv) return;
-  const header = document.querySelector('#chart-sensor').closest('.chart-container').querySelector('h4');
-  if (header) header.innerHTML = `<span style="color:${sv.color}">${sv.icon}</span> ${sv.label}`;
-  sensorChart = createChart('chart-sensor', `${sv.icon} ${sv.label}`, sv.color, false);
-}
-
 function _dataSensorKey(data) {
   if (data.temperature !== undefined && data.temperature !== null) return 'temperature';
   if (data.humidity !== undefined && data.humidity !== null) return 'humidity';
@@ -141,7 +146,18 @@ function connectWS(deviceId) {
       const sk = _dataSensorKey(data);
       if (sk) {
         App.setLiveVar(deviceId, sk);
-        _ensureSensorChart(sk);
+        if (sk !== _chartKey) {
+          _chartKey = sk;
+          const sv = App.SENSOR_VARS[sk];
+          if (sv && sensorChart) {
+            sensorChart.data.datasets[0].label = `${sv.icon} ${sv.label}`;
+            sensorChart.data.datasets[0].borderColor = sv.color;
+            sensorChart.data.datasets[0].backgroundColor = sv.color + '18';
+            sensorChart.data.datasets[0].pointBackgroundColor = sv.color;
+            sensorChart.update('none');
+          }
+          _updateSensorHeader(sk);
+        }
         appendLive(sensorChart, 'sensor', now, data[sk]);
       }
       appendLive(rssiChart, 'rssi', now, data.rssi);
@@ -178,6 +194,7 @@ async function startRealtimeCharts(deviceId, period) {
   if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
   if (_historyRefreshTimer) { clearInterval(_historyRefreshTimer); _historyRefreshTimer = null; }
   _currentDeviceId = deviceId;
+  _chartKey = null;
 
   try {
     if (sensorChart) sensorChart.destroy();
@@ -186,22 +203,34 @@ async function startRealtimeCharts(deviceId, period) {
     rssiChart = null;
   } catch(e) { console.error(e); }
 
-  const sensorKey = _sensorKeyFromId(deviceId);
-  const sv = sensorKey ? App.SENSOR_VARS[sensorKey] : null;
-
-  if (sv && document.getElementById('chart-sensor'))
-    sensorChart = createChart('chart-sensor', `${sv.icon} ${sv.label}`, sv.color, false);
+  // Siempre crear ambos charts (aunque no sepamos la variable aun)
+  if (document.getElementById('chart-sensor'))
+    sensorChart = createChart('chart-sensor', '🌱 Sensor', '#84cc16', false);
   if (document.getElementById('chart-rssi'))
     rssiChart = createChart('chart-rssi', 'RSSI', '#a78bfa', true);
 
-  const hist = await fetchHistory(deviceId, period || '1h', sensorKey || 'temperature');
-  if (sv) loadHistoryIntoChart(sensorChart, hist.sensor);
+  // Cargar historico — consultamos todas las variables para detectar cual tiene datos
+  const hist = await fetchHistory(deviceId, period || '1h', 'temperature,humidity,light');
+  if (hist.detectedKey) {
+    _chartKey = hist.detectedKey;
+    _updateSensorHeader(hist.detectedKey);
+    if (sensorChart) {
+      const sv = App.SENSOR_VARS[hist.detectedKey];
+      if (sv) {
+        sensorChart.data.datasets[0].label = `${sv.icon} ${sv.label}`;
+        sensorChart.data.datasets[0].borderColor = sv.color;
+        sensorChart.data.datasets[0].backgroundColor = sv.color + '18';
+        sensorChart.data.datasets[0].pointBackgroundColor = sv.color;
+        sensorChart.update('none');
+      }
+    }
+  }
+  loadHistoryIntoChart(sensorChart, hist.sensor);
   loadHistoryIntoChart(rssiChart, hist.rssi);
 
   _historyRefreshTimer = setInterval(async () => {
-    const sk = _sensorKeyFromId(deviceId);
-    const h = await fetchHistory(deviceId, period || '1h', sk || 'temperature');
-    if (sk) loadHistoryIntoChart(sensorChart, h.sensor);
+    const h = await fetchHistory(deviceId, period || '1h', _chartKey || 'temperature,humidity,light');
+    loadHistoryIntoChart(sensorChart, h.sensor);
     loadHistoryIntoChart(rssiChart, h.rssi);
   }, 60000);
 
