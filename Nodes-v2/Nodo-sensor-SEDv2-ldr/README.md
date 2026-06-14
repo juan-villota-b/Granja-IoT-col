@@ -1,7 +1,7 @@
 # Nodo-sensor-SEDv2
 
 Firmware para ESP32-C6 como nodo sensor Sleepy End Device (SED) en red Thread.
-Lee humedad de suelo (HW-390), la envía por CoAP POST al Bridge OTBR, que la publica en ThingsBoard.
+Lee temperatura, la envía por CoAP POST al Bridge OTBR, que la publica en ThingsBoard.
 
 ## Índice
 
@@ -28,7 +28,7 @@ Lee humedad de suelo (HW-390), la envía por CoAP POST al Bridge OTBR, que la pu
 │  ESP32-C6                                                         │
 │                                                                   │
 │  ┌──────────────┐  ┌──────────────────┐  ┌────────────────────┐  │
-│  │ sensor_hw390 │→│  nodo_th_auto    │→│  push_client       │  │
+│  │ sensor_temp  │→│  nodo_th_auto    │→│  push_client       │  │
 │  │  .c/.h       │  │  (orquestador)  │  │  (CoAP POST)      │  │
 │  └──────────────┘  └──────────────────┘  └─────────┬──────────┘  │
 │                                                     │             │
@@ -41,7 +41,7 @@ Lee humedad de suelo (HW-390), la envía por CoAP POST al Bridge OTBR, que la pu
 └────────────────────────────────────────────────────────────────────┘
                            │
                      CoAP CON POST /readings
-                      CBOR {id, h, r, u}
+                     CBOR {id, t, r, u}
                            │
                            ▼
 ┌────────────────────────────────────────────────────────────────────┐
@@ -75,8 +75,8 @@ Nodo-sensor-SEDv2/
     ├── node_config.h            ← Identidad y constantes del nodo
     ├── config.h                ← Struct de configuración persistente
     ├── config.c                ← Carga/guarda configuración en NVS
-    ├── sensor_hw390.h          ← Interfaz del sensor de humedad HW-390
-    ├── sensor_hw390.c          ← Lectura ADC del HW-390
+    ├── sensor_temp.h           ← Interfaz del sensor de temperatura
+    ├── sensor_temp.c           ← Implementación (simulada o real)
     ├── push_client.h           ← Interfaz de envío CoAP
     ├── push_client.c           ← POST /readings al Bridge
     ├── nodo_th_auto.c          ← Orquestador principal (app_main)
@@ -98,7 +98,7 @@ project(nodo_sed_v2)
 
 #### `main/CMakeLists.txt`
 ```cmake
-idf_component_register(SRCS nodo_th_auto.c push_client.c config.c sensor_hw390.c
+idf_component_register(SRCS nodo_th_auto.c push_client.c config.c sensor_temp.c
                        INCLUDE_DIRS "."
                        REQUIRES esp_event esp_netif nvs_flash openthread vfs coap)
 ```
@@ -135,25 +135,25 @@ typedef struct {
 - Claves NVS: `temp_th`, `hb_s`, `sample_ms`, `lat_i`, `lng_i`
 - Compatible con SED-2 (mismas claves)
 
-#### `sensor_hw390.h` / `sensor_hw390.c`
-Sensor de humedad de suelo HW-390 vía ADC:
+#### `sensor_temp.h` / `sensor_temp.c`
+Abstracción del sensor de temperatura:
 ```c
-typedef struct { float humedad; } sensor_data_t;
-void sensor_hw390_init(void);
-sensor_data_t sensor_hw390_leer(void);
+typedef struct { float temperatura_c; } sensor_temp_t;
+void sensor_temp_init(void);
+sensor_temp_t sensor_temp_leer(void);
 ```
-- Lectura analógica por ADC1_CH4 (GPIO4)
-- Curva de calibración: 2800mV (seco, 0%) → 1300mV (húmedo, 100%)
-- Calibración por curve-fitting del ESP32-C6
-- Rango: 0% a 100% humedad de suelo
+- Simulación senoidal: `T = 25 + 2·sin(2π·t/1200) + ruido(±0.1°C)`
+- Período: 1200s (20 minutos)
+- Rango: ~23°C a ~27°C
+- Para reemplazar con sensor real: solo cambiar `sensor_temp_leer()`
 
 #### `push_client.h` / `push_client.c`
 Cliente CoAP para POST /readings:
 ```c
-esp_err_t push_telemetry(sensor_data_t *lectura, int8_t rssi, uint32_t uptime_s, bool is_first);
+esp_err_t push_telemetry(sensor_temp_t *lectura, int8_t rssi, uint32_t uptime_s, bool is_first);
 ```
-- `is_first=true`: envía `{id, tp, v, h, r, u}` (registro + telemetría)
-- `is_first=false`: envía `{id, h, r, u}` (solo telemetría)
+- `is_first=true`: envía `{id, tp, v, t, r, u}` (registro + telemetría)
+- `is_first=false`: envía `{id, t, r, u}` (solo telemetría)
 - CON message, response handler que detecta ACK 2.xx
 - RSSI real desde `otThreadGetParentLastRssi()`
 - Timeout por intento: 1500ms
@@ -183,10 +183,10 @@ Headers de configuración de OpenThread para ESP-IDF.
 ### Uplink (nodo → dashboard)
 
 ```
-sensor_hw390_leer()
-    │ humedad = 65.0%
+sensor_temp_leer()
+    │ T = 25.3°C
     ▼
-nodo_th_auto.c: ΔH > 5.0%? ¿o heartbeat 300s?
+nodo_th_auto.c: ΔT > 0.5°C? ¿o heartbeat 300s?
     │ sí
     ▼
 push_telemetry(lectura, 0, uptime, false)
@@ -199,9 +199,9 @@ push_telemetry(lectura, 0, uptime, false)
     ▼  (Thread mesh → OTBR wpan0 → kernel)
     │
 Bridge render_post():
-    ├─ cbor2.loads() → {"id":"NODO-SENSOR-1","h":65.0,"r":-62,"u":1234}
+    ├─ cbor2.loads() → {"id":"NODO-SENSOR-1","t":25.3,"r":-62,"u":1234}
     ├─ ¿nodo conocido? no → auto-register: connect_dev + attributes
-    ├─ ¿"h" in data? sí → telemetry(humidity, rssi, uptime)
+    ├─ ¿"t" in data? sí → telemetry(temperature, rssi, uptime)
     ├─ ¿pending_commands? → devuelve en respuesta
     └─ 2.05 Content {comando o vacío}
     │
@@ -380,8 +380,8 @@ aprovecha la caché de ruta y responde en ~50ms.
 
 ```
 Bridge log:
-  05:05:01 >>> NODO-SENSOR-1 h=65.0% rssi=-64 up=4s    ← intento 1 (timeout)
-  05:05:02 >>> NODO-SENSOR-1 h=65.0% rssi=-64 up=4s    ← intento 2 (ACK ✅)
+  05:05:01 >>> NODO-SENSOR-1 t=25.0°C rssi=-64 up=4s    ← intento 1 (timeout)
+  05:05:02 >>> NODO-SENSOR-1 t=25.0°C rssi=-64 up=4s    ← intento 2 (ACK ✅)
 ```
 
 El Bridge procesa ambos POSTs como mensajes distintos.
@@ -445,7 +445,7 @@ map(6) {
   "id":  "NODO-SENSOR-1"     → identificación
   "tp":  "sensor_sed"        → tipo de nodo
   "v":   "5.2.0"             → versión firmware
-  "h":   65.0               → humedad (float16, 2 bytes)
+  "t":   25.3                 → temperatura (float16, 2 bytes)
   "r":   -62                  → RSSI (negint8, 1 byte)
   "u":   1234                 → uptime segundos (uint32, 5 bytes)
 }
@@ -457,7 +457,7 @@ Total: ~32 bytes CBOR
 ```
 map(4) {
   "id":  "NODO-SENSOR-1"     → identificación (siempre incluido)
-  "h":   65.0                 → humedad (float16)
+  "t":   25.3                 → temperatura (float16)
   "r":   -62                  → RSSI (negint8)
   "u":   1300                 → uptime segundos (uint32)
 }
@@ -579,7 +579,7 @@ CONFIG_LWIP_HOOK_IP6_SELECT_SRC_ADDR_CUSTOM=y
 
 ## Bridge (lado servidor)
 
-El Bridge corre en Docker (`otbr/bridge/`) en `network_mode: host`.
+El Bridge corre en Docker en la Raspberry Pi (`Raspberry-v2/bridge/`) en `network_mode: host`.
 Usa `aiocoap` como servidor CoAP en puerto 5685/udp.
 
 ### Endpoint `/readings` (POST)
@@ -594,7 +594,7 @@ Recibe CBOR, procesa:
 3. Publica telemetría: `temperature` (float), `rssi` (int), `uptime` (int)
 4. Verifica `pending_commands[nid]`
 5. Responde 2.05 Content con comando CBOR (o `{}` vacío)
-6. Log: `>>> NODO-SENSOR-1 h=65.0% rssi=-62 up=1234s`
+6. Log: `>>> NODO-SENSOR-1 t=25.3°C rssi=-62 up=1234s`
 
 ### Comunicación con ThingsBoard
 

@@ -56,7 +56,7 @@ Dashboard:3000 ──REST──→ TB Edge ──MQTT──→ Bridge ──CoAP
 | Servicio | Puerto | Descripcion |
 |----------|--------|-------------|
 | Granja Dashboard | 3000 | FastAPI + Leaflet + Chart.js — mobile-first SPA |
-| TB Edge (host) | 8080 | ThingsBoard Edge 4.2.0EDGE — API REST + MQTT |
+| TB CE (host) | 8080 | ThingsBoard CE — recibe sincronizacion del Edge y sirve al dashboard |
 
 ## URLs de acceso
 
@@ -134,9 +134,9 @@ sudo tailscale funnel --bg 3000
 # URL generada: https://granja-iot.tailaf11de.ts.net
 ```
 
-## Bridge — Como funciona
+## Bridge — Como funciona (en la RPi)
 
-El bridge expone un **servidor CoAP en `[::]:5685`** con un recurso:
+El bridge corre en la Raspberry Pi (`Raspberry-v2/bridge/`). Expone un **servidor CoAP en `[::]:5685`** con un recurso:
 
 | URI | Metodo | Payload | Respuesta |
 |-----|--------|---------|-----------|
@@ -150,7 +150,7 @@ Cada nodo reporta keys especificas segun su tipo de sensor:
 
 ### Control automatico de riego
 
-El `IrrigationController` (`bridge/automation/irrigation.py`) evalua toda la telemetria entrante y decide cuando abrir/cerrar la valvula. Logica detallada en `AGENTS.md`.
+El `IrrigationController` (`Raspberry-v2/bridge/automation/irrigation.py`) evalua toda la telemetria entrante y decide cuando abrir/cerrar la valvula. Logica detallada en `AGENTS.md`.
 
 ## Estructura del proyecto
 
@@ -170,27 +170,19 @@ otbr/
 │   │   ├── tb_client.py      # Cliente HTTP ThingsBoard
 │   │   └── config.py
 │   └── requirements.txt
-├── bridge/                   # Bridge Python (CoAP Server + MQTT Gateway + Irrigation)
-│   ├── main.py
-│   ├── config.yaml
-│   ├── mqtt/
-│   ├── automation/
-│   │   └── irrigation.py
-│   ├── start.sh
-│   └── Dockerfile
 └── README.md
 ```
 
 ```
 Granja-IOT/
 ├── Nodes-v2/                 # Firmware ESP32-C6 SED (4 nodos)
-│   ├── Nodo-sensor-SEDv2/    # Nodo-Luz (LDR, light%)
-│   ├── Nodo-sensor-SEDv2-2/  # Nodo-Temperatura (DHT22, temp°C)
-│   ├── Nodo-sensor-SEDv2-3/  # Nodo-Humedad (HW-390, soil humidity%)
-│   └── Nodo-sensor-SEDv2-4/  # BOMBA (relay GPIO7, valve 0/1)
+│   ├── Nodo-sensor-SEDv2-ldr/   # Nodo-Luz (LDR, light%)
+│   ├── Nodo-sensor-SEDv2-temp/  # Nodo-Temperatura (DHT22, temp°C)
+│   ├── Nodo-sensor-SEDv2-hum/   # Nodo-Humedad (HW-390, soil humidity%)
+│   └── Nodo-sensor-SEDv2-valve/ # BOMBA (relay GPIO7, valve 0/1)
 ├── Raspberry-v2/             # Stack Docker para RPi gateway (produccion)
 ├── otbr/                     # Stack de desarrollo local + dashboard
-└── Nodes-legacy/             # Firmware antiguo (obsoleto)
+└── thingsboard-docker/       # ThingsBoard CE central
 ```
 
 ## Credenciales

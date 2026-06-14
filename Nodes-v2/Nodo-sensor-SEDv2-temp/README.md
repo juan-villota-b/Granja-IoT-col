@@ -579,7 +579,7 @@ CONFIG_LWIP_HOOK_IP6_SELECT_SRC_ADDR_CUSTOM=y
 
 ## Bridge (lado servidor)
 
-El Bridge corre en Docker (`otbr/bridge/`) en `network_mode: host`.
+El Bridge corre en Docker en la Raspberry Pi (`Raspberry-v2/bridge/`) en `network_mode: host`.
 Usa `aiocoap` como servidor CoAP en puerto 5685/udp.
 
 ### Endpoint `/readings` (POST)

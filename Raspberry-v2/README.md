@@ -107,8 +107,8 @@ docker compose -f ~/Raspberry-v2/docker-compose.yml up -d --build bridge
 
 ```bash
 # Copiar archivos locales a la RPi
-scp otbr/bridge/automation/irrigation.py finca@192.168.1.114:~/Raspberry-v2/bridge/automation/
-scp otbr/bridge/automation/__init__.py finca@192.168.1.114:~/Raspberry-v2/bridge/automation/
+scp Raspberry-v2/bridge/automation/irrigation.py finca@192.168.1.114:~/Raspberry-v2/bridge/automation/
+scp Raspberry-v2/bridge/automation/__init__.py finca@192.168.1.114:~/Raspberry-v2/bridge/automation/
 
 # Reconstruir el contenedor
 ssh finca@192.168.1.114 'cd ~/Raspberry-v2 && docker compose up -d --build bridge'
