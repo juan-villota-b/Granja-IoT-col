@@ -5,17 +5,32 @@
 
 let map = null;
 let markers = {};
-let gatewayGroup = null;
 let nodeGroup = null;
-let connectionLines = null;
 
 const CENTER_LAT = 5.0298;
 const CENTER_LNG = -75.4715;
 const SCALE = 0.002;
-const ZOOM_THRESHOLD = 15;
-const INITIAL_ZOOM = 12;
+const ZOOM_THRESHOLD = 18;
+const INITIAL_ZOOM = 17;
+const GATEWAY_LAT = 5.029181;
+const GATEWAY_LNG = -75.472722;
+const GATEWAY_NAME = 'Gateway-Raspberry';
+let gatewayMarker = null;
+let connectionLines = [];
 
-let _nodeCoords = {};
+function drawConnections() {
+  if (!map) return;
+  connectionLines.forEach(l => map.removeLayer(l));
+  connectionLines = [];
+  Object.keys(markers).forEach(id => {
+    const m = markers[id];
+    if (!m._active) return;
+    const line = L.polyline([m.getLatLng(), [GATEWAY_LAT, GATEWAY_LNG]], {
+      color: '#06b6d4', weight: 1.5, opacity: 0.5, dashArray: '4 6',
+    }).addTo(map);
+    connectionLines.push(line);
+  });
+}
 
 function toLatLng(posX, posY) {
   const lat = CENTER_LAT + (posY - 50) * SCALE;
@@ -30,9 +45,91 @@ function getDeviceLatLng(dev) {
   }
   let posX = parseFloat(attrs.pos_x);
   let posY = parseFloat(attrs.pos_y);
-  if (isNaN(posX)) posX = 50;
-  if (isNaN(posY)) posY = 50;
+  if (isNaN(posX)) posX = 50 + Math.random() * 20;
+  if (isNaN(posY)) posY = 50 + Math.random() * 20;
   return toLatLng(posX, posY);
+}
+
+// ── Icono de marcador ─────────────────────────────────────────────
+function _makeDivIcon(dev, active) {
+  const isValve = (dev.type || '').toLowerCase().includes('valve')
+               || (dev.name || '').toLowerCase().includes('valve');
+  const isSensor = (dev.type || '').toLowerCase().includes('sed')
+                || (dev.type || '').toLowerCase().includes('th')
+                || (dev.name || '').toLowerCase().includes('sensor')
+                || (dev.name || '').toLowerCase().includes('th_auto');
+
+  const color = App.markerColor(active, isValve, isSensor);
+  const size = 18;
+  const borderColor = active ? 'white' : '#9ca3af';
+  const opacity = active ? '1' : '0.7';
+  const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
+  const html = `<div style="width:${size}px;height:${size}px;background:${color};border:2.5px solid ${borderColor};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`;
+  return L.divIcon({ className: '', html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+}
+
+// ── Popup HTML ────────────────────────────────────────────────────
+function _buildPopupContent(dev, markerMeta) {
+  const tel = dev.telemetry || {};
+  const name = markerMeta ? markerMeta._name : dev.name;
+  const zone = markerMeta ? markerMeta._zone : (dev.attributes || {}).zone || (dev.attributes || {}).Zone || '';
+  const active = App.isDeviceActive(dev);
+
+  const statusColor = active ? '#22c55e' : '#ef4444';
+  const statusText = active ? 'Activo' : 'Inactivo';
+
+  const uptime = active ? (tel.uptime ? parseInt(tel.uptime) : 0) : 0;
+  let uptimeStr = '--';
+  if (active && uptime > 0) {
+    const h = Math.floor(uptime / 3600);
+    const m = Math.floor((uptime % 3600) / 60);
+    uptimeStr = `${h}h ${m}m`;
+  }
+
+  const sensorVar = App.getNodeSensorVar(tel, dev.id);
+  const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
+  let telemRows = '';
+  if (sv)
+    telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
+  if (tel.rssi !== undefined && tel.rssi !== null)
+    telemRows += `<div class="popup-row"><span class="popup-label">\uD83D\uDCE1 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
+
+  return `<div class="node-popup">
+    <div class="popup-header">
+      <div class="popup-status-dot" style="background:${statusColor}"></div>
+      <strong class="popup-title">${App.esc(name)}</strong>
+      <span class="popup-status" style="color:${statusColor}">${statusText}</span>
+    </div>
+    ${zone ? `<div class="popup-zone">\uD83D\uDCCD ${App.esc(zone)}</div>` : ''}
+    <div class="popup-divider"></div>
+    ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
+    <div class="popup-divider"></div>
+    <div class="popup-footer">
+      <span class="popup-label">\u23F1 Uptime</span>
+      <strong class="popup-value">${uptimeStr}</strong>
+    </div>
+  </div>`;
+}
+
+// ── Init / Reset ──────────────────────────────────────────────────
+function resetMap() {
+  if (map) { map.remove(); map = null; markers = {}; }
+  if (nodeGroup) nodeGroup.clearLayers();
+  const info = document.getElementById('node-info');
+  if (info) {
+    info.innerHTML = `<p class="placeholder-text">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;display:block;margin:0 auto 12px">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      Selecciona un nodo en el mapa<br>o en el selector para ver su telemetria
+    </p>`;
+  }
+  const charts = document.getElementById('panel-charts');
+  if (charts) charts.innerHTML = '';
+  const mini = document.getElementById('node-history-mini');
+  if (mini) mini.innerHTML = '';
+  const sel = document.getElementById('node-selector');
+  if (sel) sel.innerHTML = '<option value="">Selecciona un nodo...</option>';
 }
 
 function initMap(devices) {
@@ -40,23 +137,17 @@ function initMap(devices) {
   if (!container) return;
 
   if (map) { map.remove(); map = null; markers = {}; }
-  _nodeCoords = {};
 
-  // Guardar el estado previo en memoria antes de que las tiles lo pisen
-  var savedView = null;
+  let savedView = null;
   try { savedView = localStorage.getItem('granja_map_state'); } catch(e) { /* localStorage blocked */ }
-
-  const nodes = devices.filter(d => !App.isGateway(d));
-  nodes.forEach(d => { _nodeCoords[d.id] = getDeviceLatLng(d); });
 
   updateStatusBar(devices);
 
-  // Restaurar vista si habia estado guardado
-  var center = [CENTER_LAT, CENTER_LNG];
-  var zoom = INITIAL_ZOOM;
+  let center = [CENTER_LAT, CENTER_LNG];
+  let zoom = INITIAL_ZOOM;
   if (savedView) {
     try {
-      var sv = JSON.parse(savedView);
+      const sv = JSON.parse(savedView);
       if (typeof sv.lat === 'number' && typeof sv.lng === 'number' && typeof sv.zoom === 'number') {
         center = [sv.lat, sv.lng];
         zoom = sv.zoom;
@@ -78,8 +169,27 @@ function initMap(devices) {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
   }).addTo(map);
 
-  gatewayGroup = L.layerGroup().addTo(map);
   nodeGroup = L.layerGroup().addTo(map);
+
+  const gwIcon = L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:28px;height:28px">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0ea5e9,#6366f1);border:2.5px solid white;border-radius:50%;box-shadow:0 0 14px rgba(14,165,233,0.4),0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <circle cx="12" cy="20" r="2"/>
+        </svg>
+      </div>
+      <div style="position:absolute;top:-1px;right:-1px;width:9px;height:9px;background:#22c55e;border:1.5px solid white;border-radius:50%"></div>
+    </div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+  gatewayMarker = L.marker([GATEWAY_LAT, GATEWAY_LNG], { icon: gwIcon, zIndexOffset: 1000 })
+    .bindTooltip(GATEWAY_NAME, { direction: 'top', offset: [0, -14] })
+    .addTo(map);
 
   devices.forEach(dev => addDeviceMarker(dev));
   drawConnections();
@@ -87,18 +197,17 @@ function initMap(devices) {
 
   map.on('zoomend', updateZoomVisibility);
 
-  // Guardar cambios del usuario (solo despues de que todo este estable)
-  var saveTimer = null;
+  let saveTimer = null;
   map.on('moveend', function() {
     if (!map) return;
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function() {
       try {
-        var c = map.getCenter();
+        const c = map.getCenter();
         localStorage.setItem('granja_map_state', JSON.stringify({
           lat: c.lat, lng: c.lng, zoom: map.getZoom()
         }));
-    } catch(e) { /* bad saved state, use defaults */ }
+      } catch(e) { /* save failed */ }
     }, 300);
   });
 
@@ -112,23 +221,22 @@ function initMap(devices) {
     refreshAllMarkers();
   }, 5000);
 
-  // Recuperar estado al volver a la pestaña
+  let _onVisibilityChange;
   document.removeEventListener('visibilitychange', _onVisibilityChange);
-  window._onVisibilityChange = async () => {
+  _onVisibilityChange = async () => {
     if (document.visibilityState === 'visible') {
       await refreshDeviceTimestamps();
       refreshAllMarkers();
     }
   };
-  document.addEventListener('visibilitychange', window._onVisibilityChange);
+  document.addEventListener('visibilitychange', _onVisibilityChange);
 }
 
 function updateStatusBar(devices) {
   const bar = document.getElementById('status-bar');
   if (!bar) return;
-  const nodes = devices.filter(d => !App.isGateway(d));
-  const total = nodes.length;
-  const active = nodes.filter(d => App.isDeviceActive(d)).length;
+  const total = devices.length;
+  const active = devices.filter(d => App.isDeviceActive(d)).length;
   bar.innerHTML = `
     <span class="status-item">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -145,140 +253,33 @@ function updateStatusBar(devices) {
 }
 
 function addDeviceMarker(dev) {
-  const attrs = dev.attributes || {};
-  const tel = dev.telemetry || {};
-  const gw = App.isGateway(dev);
   const active = App.isDeviceActive(dev);
-  const devices = App.state.devices;
+  const latlng = getDeviceLatLng(dev);
 
-  let lat, lng;
-  if (gw) {
-    if (attrs.lat !== undefined && attrs.lng !== undefined) {
-      lat = parseFloat(attrs.lat);
-      lng = parseFloat(attrs.lng);
-    } else {
-      const ids = Object.keys(_nodeCoords);
-      if (ids.length > 0) {
-        const sum = ids.reduce((acc, id) => { acc[0] += _nodeCoords[id][0]; acc[1] += _nodeCoords[id][1]; return acc; }, [0, 0]);
-        lat = sum[0] / ids.length;
-        lng = sum[1] / ids.length;
-      } else {
-        lat = CENTER_LAT; lng = CENTER_LNG;
-      }
-    }
-  } else {
-    const c = _nodeCoords[dev.id] || getDeviceLatLng(dev);
-    lat = c[0]; lng = c[1];
-  }
-  const zone = attrs.zone || attrs.Zone || '';
+  const icon = _makeDivIcon(dev, active);
+  const tooltipText = dev.name;
 
-  const isValve = (dev.type || '').toLowerCase().includes('valve') || (dev.name || '').toLowerCase().includes('valve');
-  const isSensor = (dev.type || '').toLowerCase().includes('sed') || (dev.type || '').toLowerCase().includes('th') || (dev.name || '').toLowerCase().includes('sensor') || (dev.name || '').toLowerCase().includes('th_auto');
-
-  let markerColor, size, iconHtml;
-
-  if (gw) {
-    markerColor = '#8b5cf6';
-    size = 36;
-    iconHtml = `<div style="
-      width:${size}px;height:${size}px;
-      background:${markerColor};
-      border:3px solid rgba(255,255,255,0.35);
-      clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
-      box-shadow:0 0 20px rgba(139,92,246,0.4), 0 4px 16px rgba(0,0,0,0.5);
-      display:flex;align-items:center;justify-content:center;
-    "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:relative;z-index:1">
-      <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-      <path d="M8.53 15.67a6 6 0 0 1 6.95 0"/>
-      <circle cx="12" cy="20" r="1"/>
-    </svg></div>`;
-  } else {
-    markerColor = isValve ? '#ef4444' : (isSensor ? '#22c55e' : '#3b82f6');
-    size = 18;
-    if (!active) markerColor = '#6b7280';
-    const borderColor = active ? 'white' : '#9ca3af';
-    const opacity = active ? '1' : '0.7';
-    const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
-    iconHtml = `<div style="width:${size}px;height:${size}px;background:${markerColor};border:2.5px solid ${borderColor};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`;
-  }
-
-  const icon = L.divIcon({ className: '', html: iconHtml, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
-
-  const tooltipText = gw ? `📡 ${dev.name}` : `${dev.name}`;
-
-  const marker = L.marker([lat, lng], { icon }).bindTooltip(tooltipText, {
+  const marker = L.marker(latlng, { icon }).bindTooltip(tooltipText, {
     permanent: true,
     direction: 'top',
     offset: [0, -14],
     className: 'farm-tooltip',
   });
 
-  let popupHtml;
-  if (gw) {
-    const nodeList = devices.filter(d => !App.isGateway(d));
-    const activeNodes = nodeList.filter(d => App.isDeviceActive(d)).length;
-    const inactiveNodes = nodeList.length - activeNodes;
-    popupHtml = `<div style="min-width:200px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:28px;height:28px;background:#8b5cf6;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="20" r="1"/></svg>
-        </div>
-        <div>
-          <strong style="font-size:1.05rem;color:#c4b5fd">${App.esc(dev.name)}</strong>
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:1px">Gateway Thread · Border Router</div>
-        </div>
-      </div>
-      <hr style="border-color:var(--border);margin:10px 0" />
-      <div style="display:flex;gap:16px;margin-bottom:6px">
-        <div><span style="font-size:0.7rem;color:var(--text-dim)">Sensores</span><br><strong>${nodeList.length}</strong></div>
-        <div><span style="font-size:0.7rem;color:var(--text-dim)">Activos</span><br><strong style="color:var(--success)">${activeNodes}</strong></div>
-        <div><span style="font-size:0.7rem;color:var(--text-dim)">Inactivos</span><br><strong style="color:var(--danger)">${inactiveNodes}</strong></div>
-      </div>
-      <div style="margin-top:8px;font-size:0.78rem;color:var(--text-dim);font-style:italic">Centro de conexión de la red de sensores</div>
-    </div>`;
-  } else {
-    const statusIcon = active ? '🟢' : '🔴';
-    const statusText = active ? 'Activo' : 'Inactivo';
-    const statusColor = active ? '#22c55e' : '#ef4444';
-    const uptime = tel.uptime ? parseInt(tel.uptime) : 0;
-    let uptimeStr = '--';
-    if (uptime > 0) {
-      const h = Math.floor(uptime / 3600);
-      const m = Math.floor((uptime % 3600) / 60);
-      uptimeStr = `${h}h ${m}m`;
-    }
-    let telemRows = '';
-    const sensorVar = App.getNodeSensorVar(tel, dev.id);
-    const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
-    if (sv)
-      telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
-    if (tel.rssi !== undefined && tel.rssi !== null)
-      telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
-    popupHtml = `<div class="node-popup">
-      <div class="popup-header">
-        <div class="popup-status-dot" style="background:${statusColor}"></div>
-        <strong class="popup-title">${App.esc(dev.name)}</strong>
-        <span class="popup-status" style="color:${statusColor}">${statusText}</span>
-      </div>
-      ${zone ? `<div class="popup-zone">📍 ${App.esc(zone)}</div>` : ''}
-      <div class="popup-divider"></div>
-      ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
-      <div class="popup-divider"></div>
-      <div class="popup-footer">
-        <span class="popup-label">⏱ Uptime</span>
-        <strong class="popup-value">${uptimeStr}</strong>
-      </div>
-    </div>`;
-  }
-  marker.bindPopup(popupHtml);
-
+  marker.bindPopup(_buildPopupContent(dev, null));
   marker.on('click', () => {
-    if (!gw) {
-      App.selectNode(dev.id);
-    }
+    App.selectNode(dev.id);
   });
 
-  marker.isGateway = gw;
+  const isValve = (dev.type || '').toLowerCase().includes('valve')
+               || (dev.name || '').toLowerCase().includes('valve');
+  const isSensor = (dev.type || '').toLowerCase().includes('sed')
+                || (dev.type || '').toLowerCase().includes('th')
+                || (dev.name || '').toLowerCase().includes('sensor')
+                || (dev.name || '').toLowerCase().includes('th_auto');
+  const attrs = dev.attributes || {};
+  const zone = attrs.zone || attrs.Zone || '';
+
   marker._devId = dev.id;
   marker._name = dev.name;
   marker._active = active;
@@ -286,42 +287,8 @@ function addDeviceMarker(dev) {
   marker._isSensor = isSensor;
   marker._zone = zone;
 
-  if (gw) {
-    marker.addTo(gatewayGroup);
-  } else {
-    marker.addTo(nodeGroup);
-  }
-
+  marker.addTo(nodeGroup);
   markers[dev.id] = marker;
-}
-
-function drawConnections() {
-  if (connectionLines) map.removeLayer(connectionLines);
-  connectionLines = L.layerGroup();
-
-  const gateways = App.state.devices.filter(d => App.isGateway(d));
-  if (gateways.length === 0) return;
-
-  const gwDev = gateways[0];
-  const gwMarker = markers[gwDev.id];
-  if (!gwMarker) return;
-  const gwLatLng = gwMarker.getLatLng();
-
-  const nodes = App.state.devices.filter(d => !App.isGateway(d));
-  nodes.forEach(node => {
-    const m = markers[node.id];
-    if (!m) return;
-    const active = App.isDeviceActive(node);
-    const line = L.polyline([gwLatLng, m.getLatLng()], {
-      color: active ? 'rgba(139, 92, 246, 0.25)' : 'rgba(107, 114, 128, 0.12)',
-      weight: 1.5,
-      dashArray: '6 4',
-      interactive: false,
-    });
-    connectionLines.addLayer(line);
-  });
-
-  connectionLines.addTo(map);
 }
 
 function updateZoomVisibility() {
@@ -331,29 +298,19 @@ function updateZoomVisibility() {
   const zoomHint = document.getElementById('zoom-hint');
   if (zoomHint) zoomHint.style.opacity = showDetail ? '0' : '1';
 
-  // Gateway siempre visible
-  if (!map.hasLayer(gatewayGroup)) map.addLayer(gatewayGroup);
-
-  // Nodos solo con zoom
   if (showDetail) {
     if (!map.hasLayer(nodeGroup)) map.addLayer(nodeGroup);
+    drawConnections();
   } else {
     if (map.hasLayer(nodeGroup)) map.removeLayer(nodeGroup);
-  }
-
-  // Lineas de conexion solo con zoom
-  if (connectionLines) {
-    if (showDetail) {
-      if (!map.hasLayer(connectionLines)) map.addLayer(connectionLines);
-    } else {
-      if (map.hasLayer(connectionLines)) map.removeLayer(connectionLines);
-    }
+    connectionLines.forEach(l => map.removeLayer(l));
+    connectionLines = [];
   }
 }
 
 function updateMapHighlight(deviceId) {
   Object.entries(markers).forEach(([id, m]) => {
-    if (id === deviceId && !m.isGateway) {
+    if (id === deviceId) {
       m.setZIndexOffset(1000);
       m.openPopup();
     } else {
@@ -365,91 +322,35 @@ function updateMapHighlight(deviceId) {
 function updateMarkerTelemetry(deviceId, telemetry) {
   const marker = markers[deviceId];
   if (!marker) return;
-  if (marker.isGateway) return;
-  const tel = telemetry || {};
 
   const dev = (App.state.devices || []).find(d => d.id === deviceId);
   const active = dev ? App.isDeviceActive(dev) : marker._active;
+  if (!dev) return;
 
   if (active !== marker._active) {
     marker._active = active;
-    const iconColor = !active ? '#6b7280'
-      : marker._isValve ? '#ef4444'
-      : marker._isSensor ? '#22c55e'
-      : '#3b82f6';
-    const opacity = active ? '1' : '0.7';
-    const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
-    const size = 18;
-    marker.setIcon(L.divIcon({
-      className: '',
-      html: `<div style="width:${size}px;height:${size}px;background:${iconColor};border:2.5px solid ${active ? 'white' : '#9ca3af'};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`,
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-    }));
+    marker.setIcon(_makeDivIcon(dev, active));
   }
 
-  const uptimeStr = typeof formatUptime === 'function' ? formatUptime(tel.uptime) : (tel.uptime || '--');
-  const statusIcon = active ? '🟢' : '🔴';
-  const statusText = active ? 'Activo' : 'Inactivo';
-  const statusColor = active ? '#22c55e' : '#ef4444';
-
-  let telemRows = '';
-  const sensorVar = App.getNodeSensorVar(tel, deviceId);
-  const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
-  if (sv)
-    telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
-  if (tel.rssi !== undefined && tel.rssi !== null)
-    telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
-
-  const html = `<div class="node-popup">
-    <div class="popup-header">
-      <div class="popup-status-dot" style="background:${statusColor}"></div>
-      <strong class="popup-title">${App.esc(marker._name)}</strong>
-      <span class="popup-status" style="color:${statusColor}">${statusText}</span>
-    </div>
-    ${marker._zone ? `<div class="popup-zone">📍 ${App.esc(marker._zone)}</div>` : ''}
-    <div class="popup-divider"></div>
-    ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
-    <div class="popup-divider"></div>
-    <div class="popup-footer">
-      <span class="popup-label">⏱ Uptime</span>
-      <strong class="popup-value">${uptimeStr}</strong>
-    </div>
-  </div>`;
-  marker.setPopupContent(html);
-
+  marker.setPopupContent(_buildPopupContent(dev, marker));
   const tooltip = marker.getTooltip();
   if (tooltip) tooltip.setContent(`${App.esc(marker._name)}`);
-  drawConnections();
 }
 
 function refreshAllMarkers() {
   if (!App || !App.state || !App.state.devices) return;
   App.state.devices.forEach(dev => {
     const marker = markers[dev.id];
-    if (!marker || marker.isGateway) return;
+    if (!marker) return;
     const active = App.isDeviceActive(dev);
     marker._active = active;
-    const iconColor = !active ? '#6b7280'
-      : marker._isValve ? '#ef4444'
-      : marker._isSensor ? '#22c55e'
-      : '#3b82f6';
-    const opacity = active ? '1' : '0.7';
-    const pulse = active ? 'animation:pulse-dot 2s ease-in-out infinite;' : '';
-    const size = 18;
-    marker.setIcon(L.divIcon({
-      className: '',
-      html: `<div style="width:${size}px;height:${size}px;background:${iconColor};border:2.5px solid ${active ? 'white' : '#9ca3af'};border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,0.35);opacity:${opacity};${pulse}"></div>`,
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-    }));
-    refreshMarkerPopup(dev.id);
+    marker.setIcon(_makeDivIcon(dev, active));
+    marker.setPopupContent(_buildPopupContent(dev, marker));
   });
-  drawConnections();
   updateStatusBar(App.state.devices);
+  if (typeof drawConnections === 'function') drawConnections();
 }
 
-// Refrescar datos de todos los nodos cada 5s sin reinit el mapa
 async function refreshDeviceTimestamps() {
   try {
     const res = await fetch('/api/devices', { credentials: 'include' });
@@ -475,39 +376,4 @@ async function refreshDeviceTimestamps() {
       }
     });
   } catch(e) { console.warn('[ts]', e.message || e); }
-}
-
-function refreshMarkerPopup(deviceId) {
-  const marker = markers[deviceId];
-  if (!marker || marker.isGateway) return;
-  const dev = (App.state.devices || []).find(d => d.id === deviceId);
-  if (!dev) return;
-  const tel = dev.telemetry || {};
-  const active = App.isDeviceActive(dev);
-  const uptimeStr = typeof formatUptime === 'function' ? formatUptime(tel.uptime) : (tel.uptime || '--');
-  const statusIcon = active ? '🟢' : '🔴';
-  const statusText = active ? 'Activo' : 'Inactivo';
-  const statusColor = active ? '#22c55e' : '#ef4444';
-  const sensorVar = App.getNodeSensorVar(tel, deviceId);
-  const sv = sensorVar ? App.SENSOR_VARS[sensorVar] : null;
-  let telemRows = '';
-  if (sv)
-    telemRows += `<div class="popup-row"><span class="popup-label">${sv.icon} ${sv.label}</span><strong class="popup-value" style="color:${sv.color}">${App.esc(tel[sensorVar])} ${sv.unit}</strong></div>`;
-  if (tel.rssi !== undefined && tel.rssi !== null)
-    telemRows += `<div class="popup-row"><span class="popup-label">📡 RSSI</span><strong class="popup-value">${App.esc(tel.rssi)} dBm</strong></div>`;
-  const html = `<div class="node-popup">
-    <div class="popup-header">
-      <div class="popup-status-dot" style="background:${statusColor}"></div>
-      <strong class="popup-title">${App.esc(marker._name)}</strong>
-      <span class="popup-status" style="color:${statusColor}">${statusText}</span>
-    </div>
-    <div class="popup-divider"></div>
-    ${telemRows || '<div class="popup-row"><span class="popup-label" style="color:var(--text-dim)">Esperando datos...</span></div>'}
-    <div class="popup-divider"></div>
-    <div class="popup-footer">
-      <span class="popup-label">⏱ Uptime</span>
-      <strong class="popup-value">${uptimeStr}</strong>
-    </div>
-  </div>`;
-  marker.setPopupContent(html);
 }

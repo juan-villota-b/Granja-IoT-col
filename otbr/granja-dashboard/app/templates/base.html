@@ -9,16 +9,41 @@
     <title>Granja Dashboard</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🌾</text></svg>">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/css/style.css?v=8" />
+    <link rel="stylesheet" href="/static/css/style.css?v=50" />
 </head>
 <body>
     <div class="app-container">
-        <aside class="sidebar">
-            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menú">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+
+        <!-- Mobile top bar -->
+        <div class="mobile-top-bar" id="mobile-top-bar">
+            <div class="mobile-top-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 22c1.5-4 4-6 10-6s8.5 2 10 6"/>
+                    <path d="M12 16V8"/>
+                    <path d="M12 8c0-3-2-4-4-4S4 5 4 8"/>
+                    <path d="M12 8c0-3 2-4 4-4s4 1 4 4"/>
                 </svg>
-            </button>
+                Granja
+            </div>
+            <div class="mobile-top-actions">
+                <button class="btn-icon" id="btn-theme-mobile" title="Tema" aria-label="Cambiar tema">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                </button>
+                <button class="btn-icon" id="btn-mobile-drawer" title="Menu" aria-label="Abrir menu">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar drawer overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Desktop sidebar -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
                     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -37,6 +62,14 @@
             </div>
             <nav class="sidebar-nav" id="sidebar-nav">
                 <div class="nav-section">
+                    <div class="nav-label">EDGEs</div>
+                    <div class="edge-selector" id="edge-selector-container">
+                        <select id="edge-selector" class="customizable cs-sm">
+                            <option value="">Todos los edges...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="nav-section">
                     <div class="nav-label">Monitoreo</div>
                     <a href="#" class="nav-link active" data-page="dashboard">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -50,23 +83,29 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                         </svg>
-                        Históricos
+                        Historicos
+                    </a>
+                    <a href="#" class="nav-link" data-page="monitoreo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        Monitoreo
                     </a>
                 </div>
                 <div class="nav-section">
                     <div class="nav-label">Control</div>
+                    <a href="#" class="nav-link" data-page="add-node">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                        Agregar Nodo
+                    </a>
                     <a href="#" class="nav-link" data-page="valvula">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22c1-2 2-4 2-7 0-3-2-5-2-7"/><path d="M12 22c-1-2-2-4-2-7 0-3 2-5 2-7"/>
                             <path d="M6 15c3 3 9 3 12 0"/><path d="M4 7c0 4 3 7 8 10"/><path d="M20 7c0 4-3 7-8 10"/>
                         </svg>
-                        Válvula
-                    </a>
-                    <a href="#" class="nav-link" data-page="config">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3"/><path d="M12 1v2"/><path d="M12 21v2"/><path d="M4.22 4.22l1.42 1.42"/><path d="M18.36 18.36l1.42 1.42"/><path d="M1 12h2"/><path d="M21 12h2"/><path d="M4.22 19.78l1.42-1.42"/><path d="M18.36 5.64l1.42-1.42"/>
-                        </svg>
-                        Reglas
+                        Valvula
                     </a>
                 </div>
             </nav>
@@ -93,20 +132,48 @@
                 </div>
             </div>
         </aside>
+
         <main class="main-content" id="main-content">
             {% block content %}{% endblock %}
         </main>
+
+        <!-- Mobile bottom nav -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <div class="bottom-nav-inner">
+                <button class="bottom-nav-btn active" data-page="dashboard" aria-label="Dashboard">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <span>Inicio</span>
+                </button>
+                <button class="bottom-nav-btn" data-page="historicos" aria-label="Historicos">
+                    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>Historia</span>
+                </button>
+                <button class="bottom-nav-btn" data-page="monitoreo" aria-label="Monitoreo">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Monitor</span>
+                </button>
+                <button class="bottom-nav-btn" data-page="valvula" aria-label="Valvula">
+                    <svg viewBox="0 0 24 24"><path d="M12 22c1-2 2-4 2-7 0-3-2-5-2-7"/><path d="M12 22c-1-2-2-4-2-7 0-3 2-5 2-7"/><path d="M6 15c3 3 9 3 12 0"/></svg>
+                    <span>Riego</span>
+                </button>
+                <button class="bottom-nav-btn" data-page="add-node" aria-label="Agregar">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    <span>Agregar</span>
+                </button>
+            </div>
+        </nav>
     </div>
 
     <div id="toast-container"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="/static/js/app.js?v=8"></script>
-    <script src="/static/js/map.js?v=8"></script>
-    <script src="/static/js/realtime.js?v=8"></script>
-    <script src="/static/js/historicos.js?v=8"></script>
-    <script src="/static/js/valve.js?v=8"></script>
+    <script src="/static/js/app.js?v=50"></script>
+    <script src="/static/js/map.js?v=50"></script>
+    <script src="/static/js/realtime.js?v=50"></script>
+    <script src="/static/js/historicos.js?v=50"></script>
+    <script src="/static/js/valve.js?v=50"></script>
+    <script src="/static/js/monitoreo.js?v=50"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

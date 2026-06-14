@@ -1,19 +1,38 @@
 bridge:
   log_level: DEBUG
   name: iot-gateway-bridge
-  version: 1.0.0
+  version: 2.0.0
 coap:
   observe_timeout_s: 300
   port: 5685
 mqtt:
   host: localhost
   port: 1883
-mqtt_mode: direct
-device_tokens:
-  NODO-SENSOR-1: "ZPFbsSCwMr9PnmNpvIUP"
-  NODO-SENSOR-2: "12zH5KNT0z6mpmAQobNZ"
-  NODO-SENSOR-3: "RbY46zbpCkY8Obg6ltS2"
+  username: "x7rvrKXwAYiu5o9A1NM3"
+  password: ""
+  connect_topic: v1/gateway/connect
+  disconnect_topic: v1/gateway/disconnect
+  telemetry_topic: v1/gateway/telemetry
+  attributes_topic: v1/gateway/attributes
+  rpc_topic: v1/gateway/rpc
+mqtt_mode: gateway
+tb_edge:
+  url: http://192.168.1.207:8080
+  username: tenant@thingsboard.org
+  password: tenant
 otbr:
   enabled: false
   rest_api: http://localhost:8081
   scan_interval_s: 30
+
+actuator_nid: BOMBA
+
+irrigation:
+  enabled: true
+  soil_low_pct: 30
+  soil_high_pct: 70
+  light_min_pct: 10
+  temp_max_c: 35.0
+  min_cycle_seconds: 60
+  allowed_start_hour: 6
+  allowed_end_hour: 23

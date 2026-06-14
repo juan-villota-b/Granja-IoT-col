@@ -1,73 +1,60 @@
 services:
   # ── OpenThread Border Router ──────────────────────────────────
-  otbr:
-    image: openthread/border-router:latest
-    container_name: otbr
-    network_mode: host
-    restart: unless-stopped
-    privileged: true
-    devices:
-      - /dev/ttyACM0:/dev/ttyACM0
-      - /dev/net/tun:/dev/net/tun
-    volumes:
-      - /var/lib/otbr:/data
-    environment:
-      OT_RCP_DEVICE: "spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=1000000&skip-rcp-compatibility-check"
-      OT_INFRA_IF: "wlo1"
-      OT_THREAD_IF: "wpan0"
-      OT_LOG_LEVEL: "7"
-      OTBR_AGENT_OPTS: >
-        -d 7
-        --vendor-name nRF52840-RCP
-        --model-name ProMicro-nRF52840
-      OT_WEB_LISTEN_ADDR: "0.0.0.0"
-      OT_WEB_LISTEN_PORT: 8083
-      OT_REST_LISTEN_ADDR: "0.0.0.0"
-      OT_REST_LISTEN_PORT: 8081
+  # otbr:
+  #   image: openthread/border-router:latest
+  #   container_name: otbr
+  #   network_mode: host
+  #   restart: unless-stopped
+  #   privileged: true
+  #   devices:
+  #     - /dev/ttyACM0:/dev/ttyACM0
+  #     - /dev/net/tun:/dev/net/tun
+  #   volumes:
+  #     - /var/lib/otbr:/data
+  #   environment:
+  #     OT_RCP_DEVICE: "spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=1000000&skip-rcp-compatibility-check"
+  #     OT_INFRA_IF: "wlo1"
+  #     OT_THREAD_IF: "wpan0"
+  #     OT_LOG_LEVEL: "7"
+  #     OTBR_AGENT_OPTS: >
+  #       -d 7
+  #       --vendor-name nRF52840-RCP
+  #       --model-name ProMicro-nRF52840
+  #     OT_WEB_LISTEN_ADDR: "0.0.0.0"
+  #     OT_WEB_LISTEN_PORT: 8083
+  #     OT_REST_LISTEN_ADDR: "0.0.0.0"
+  #     OT_REST_LISTEN_PORT: 8081
 
   # ── ThingsBoard Edge ──────────────────────────────────────────
-  mytbedge:
-    restart: always
-    image: "thingsboard/tb-edge:4.2.0EDGE"
-    ports:
-      - "8082:8080"
-      - "1884:1883"
-      - "5684:5683/udp"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tb-edge
-      CLOUD_ROUTING_KEY: 549031e7-e5e1-45b0-5e95-47423d778f50
-      CLOUD_ROUTING_SECRET: c0l34b2p3faqzlaj17cl
-      CLOUD_RPC_HOST: 172.19.0.1
-      CLOUD_RPC_PORT: 7070
-      CLOUD_RPC_SSL_ENABLED: false
-    volumes:
-      - tb-edge-data:/data
-      - tb-edge-logs:/var/log/tb-edge
-    depends_on:
-      - postgres
+  # mytbedge:
+  #   restart: always
+  #   image: "thingsboard/tb-edge:4.2.0EDGE"
+  #   ports:
+  #     - "8082:8080"
+  #     - "1884:1883"
+  #     - "5684:5683/udp"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tb-edge
+  #     CLOUD_ROUTING_KEY: 549031e7-e5e1-45b0-5e95-47423d778f50
+  #     CLOUD_ROUTING_SECRET: c0l34b2p3faqzlaj17cl
+  #     CLOUD_RPC_HOST: 172.19.0.1
+  #     CLOUD_RPC_PORT: 7070
+  #     CLOUD_RPC_SSL_ENABLED: false
+  #   volumes:
+  #     - tb-edge-data:/data
+  #     - tb-edge-logs:/var/log/tb-edge
+  #   depends_on:
+  #     - postgres
 
   # ── PostgreSQL (para TB Edge) ─────────────────────────────────
-  postgres:
-    restart: always
-    image: "postgres:16"
-    environment:
-      POSTGRES_DB: tb-edge
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - tb-edge-postgres-data:/var/lib/postgresql/data
-
-  # ── Bridge Python (simulación + gateway MQTT) ────────────────
-  bridge:
-    build:
-      context: ./bridge
-      dockerfile: Dockerfile
-    container_name: iot-bridge
-    network_mode: host
-    restart: unless-stopped
-    environment:
-      START_SIMULATION: "false"
-    depends_on:
-      - mytbedge
+  # postgres:
+  #   restart: always
+  #   image: "postgres:16"
+  #   environment:
+  #     POSTGRES_DB: tb-edge
+  #     POSTGRES_PASSWORD: postgres
+  #   volumes:
+  #     - tb-edge-postgres-data:/var/lib/postgresql/data
 
   # ── Granja Dashboard (FastAPI + Leaflet + Chart.js) ────────────
   granja-dashboard:
@@ -77,12 +64,14 @@ services:
     container_name: granja-dashboard
     ports:
       - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     environment:
-      TB_HOST: "192.168.1.114"
-      TB_PORT: "8082"
+      TB_HOST: "host.docker.internal"
+      TB_PORT: "8080"
 
-volumes:
-  tb-edge-data:
-  tb-edge-logs:
-  tb-edge-postgres-data:
+# volumes:
+#   tb-edge-data:
+#   tb-edge-logs:
+#   tb-edge-postgres-data:

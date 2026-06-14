@@ -7,7 +7,8 @@ class MQTTSubscriber:
         self._t = c.get("rpc_topic", "v1/gateway/rpc")
         self._cb = on_rpc
         self._cl = mqtt.Client()
-        self._cl.on_connect = lambda c, u, f, rc: rc == 0 and c.subscribe(self._t, qos=1)
+        self._cl.username_pw_set(c.get('username', ''), c.get('password', ''))
+        self._cl.on_connect = lambda c2, u, f2, rc: rc == 0 and c2.subscribe(self._t, qos=1)
         self._cl.on_message = lambda c, u, m: exec(
             'try:\n d=json.loads(m.payload);dev=d.get("device");mid=d.get("id");m=d.get("data",{}).get("method");p=d.get("data",{}).get("params",{})\n if dev and m:self._cb(dev,mid,m,p)\nexcept Exception as e:log.warning("RPC: %s",e)'
         )

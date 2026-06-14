@@ -1,5 +1,6 @@
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "sdkconfig.h"
 #include "esp_err.h"
@@ -48,9 +49,6 @@ static void join_thread_network(void)
     esp_openthread_lock_acquire(portMAX_DELAY);
     otInstance *ot = esp_openthread_get_instance();
 
-    /* Forzar modo SED antes de habilitar Thread.
-       Si el flag rx-on-when-idle persiste de NVS, el radio nunca duerme.
-       Limpiamos mRxOnWhenIdle y mDeviceType (MTD).          */
     otLinkModeConfig sed_mode;
     memset(&sed_mode, 0, sizeof(sed_mode));
     sed_mode.mNetworkData = 1;
@@ -68,8 +66,8 @@ static void join_thread_network(void)
 void app_main(void)
 {
     ESP_LOGI(TAG, "=== Nodo SEDv2 [%s] %s ===", NODE_ID, FW_VERSION);
-    ESP_LOGI(TAG, "Zona: %s Bridge: [%s]:%d", ZONE_ID, BRIDGE_IPV6, BRIDGE_PORT);
-    ESP_LOGI(TAG, "Power-on / reset — primer arranque");
+    ESP_LOGI(TAG, "Prov key: %s", PROV_KEY);
+    ESP_LOGI(TAG, "Bridge: [%s]:%d", BRIDGE_IPV6, BRIDGE_PORT);
 
     esp_vfs_eventfd_config_t efd_cfg = { .max_fds = 3 };
     nvs_flash_init();
@@ -98,7 +96,7 @@ void app_main(void)
     otInstance *ot = esp_openthread_get_instance();
     otLinkModeConfig mode = otThreadGetLinkMode(ot);
     if (mode.mRxOnWhenIdle) {
-        ESP_LOGW(TAG, "SED: rx-on-when-idle=1 → forzando a 0");
+        ESP_LOGW(TAG, "SED: rx-on-when-idle=1 -> forzando a 0");
         mode.mRxOnWhenIdle = false;
         mode.mDeviceType = false;
         otThreadSetLinkMode(ot, mode);
@@ -109,35 +107,42 @@ void app_main(void)
     otLinkSetPollPeriod(ot, 30000);
     esp_openthread_lock_release();
 
+    /* ── Provisioning ── */
+    ESP_LOGI(TAG, "Provisionando con key=%s...", PROV_KEY);
+    provisioning_send(PROV_KEY);
+
+    /* ── Loop de telemetria ── */
     sensor_data_t lectura = sensor_hw390_leer();
     uint32_t uptime = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
+    int8_t rssi = 0;
 
-    ESP_LOGI(TAG, "1er push (registro + telemetria)");
-    push_telemetry(&lectura, 0, uptime, true);
+    ESP_LOGI(TAG, "Push inicial");
+    push_telemetry(PROV_KEY, &lectura, rssi, uptime, true);
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     float last_hum = lectura.humedad;
-    uint32_t last_push_tick = uptime;
+    TickType_t last_push_tick = xTaskGetTickCount();
 
     while (1) {
         lectura = sensor_hw390_leer();
         uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+        rssi = 0;
 
         float delta = fabsf(lectura.humedad - last_hum);
         bool debe_push = false;
 
         if (delta > g_config.hum_threshold)
             debe_push = true;
-        else if ((uptime - last_push_tick) >= g_config.heartbeat_s)
+        else if ((uptime - last_push_tick / portTICK_PERIOD_MS * 1000) >= g_config.heartbeat_s)
             debe_push = true;
 
         if (debe_push) {
-            push_telemetry(&lectura, 0, uptime, false);
+            push_telemetry(PROV_KEY, &lectura, rssi, uptime, false);
             last_hum = lectura.humedad;
-            last_push_tick = uptime;
+            last_push_tick = xTaskGetTickCount();
         }
 
-        ESP_LOGD(TAG, "⏰ Idle %lu ms...", (unsigned long)g_config.sample_interval_ms);
+        ESP_LOGD(TAG, "Idle %lums...", (unsigned long)g_config.sample_interval_ms);
         vTaskDelay(pdMS_TO_TICKS(g_config.sample_interval_ms));
     }
 }

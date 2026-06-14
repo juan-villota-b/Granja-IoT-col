@@ -1,5 +1,6 @@
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "sdkconfig.h"
 #include "esp_err.h"
@@ -18,7 +19,7 @@
 
 #include "node_config.h"
 #include "config.h"
-#include "sensor_dht22.h"
+#include "actuador.h"
 #include "push_client.h"
 
 #include "openthread/thread.h"
@@ -48,9 +49,6 @@ static void join_thread_network(void)
     esp_openthread_lock_acquire(portMAX_DELAY);
     otInstance *ot = esp_openthread_get_instance();
 
-    /* Forzar modo SED antes de habilitar Thread.
-       Si el flag rx-on-when-idle persiste de NVS, el radio nunca duerme.
-       Limpiamos mRxOnWhenIdle y mDeviceType (MTD).          */
     otLinkModeConfig sed_mode;
     memset(&sed_mode, 0, sizeof(sed_mode));
     sed_mode.mNetworkData = 1;
@@ -67,9 +65,8 @@ static void join_thread_network(void)
 
 void app_main(void)
 {
-    ESP_LOGI(TAG, "=== Nodo SEDv2 [%s] %s ===", NODE_ID, FW_VERSION);
-    ESP_LOGI(TAG, "Zona: %s Bridge: [%s]:%d", ZONE_ID, BRIDGE_IPV6, BRIDGE_PORT);
-    ESP_LOGI(TAG, "Power-on / reset — primer arranque");
+    ESP_LOGI(TAG, "=== Actuador SEDv2 [%s] %s ===", NODE_ID, FW_VERSION);
+    ESP_LOGI(TAG, "Bridge: [%s]:%d", BRIDGE_IPV6, BRIDGE_PORT);
 
     esp_vfs_eventfd_config_t efd_cfg = { .max_fds = 3 };
     nvs_flash_init();
@@ -78,7 +75,7 @@ void app_main(void)
     esp_vfs_eventfd_register(&efd_cfg);
 
     config_init();
-    sensor_dht22_init();
+    act_init();
 
     static esp_openthread_config_t ot_cfg = {
         .netif_config = ESP_NETIF_DEFAULT_OPENTHREAD(),
@@ -98,7 +95,7 @@ void app_main(void)
     otInstance *ot = esp_openthread_get_instance();
     otLinkModeConfig mode = otThreadGetLinkMode(ot);
     if (mode.mRxOnWhenIdle) {
-        ESP_LOGW(TAG, "SED: rx-on-when-idle=1 → forzando a 0");
+        ESP_LOGW(TAG, "SED: rx-on-when-idle=1 -> forzando a 0");
         mode.mRxOnWhenIdle = false;
         mode.mDeviceType = false;
         otThreadSetLinkMode(ot, mode);
@@ -106,20 +103,31 @@ void app_main(void)
     mode = otThreadGetLinkMode(ot);
     ESP_LOGI(TAG, "SED mode: rx=%d devtype=%d netdata=%d",
              mode.mRxOnWhenIdle, mode.mDeviceType, mode.mNetworkData);
-    otLinkSetPollPeriod(ot, 15000);
+    otLinkSetPollPeriod(ot, 1000);
     esp_openthread_lock_release();
 
-    sensor_temp_t lectura = sensor_dht22_leer();
+    /* ── Provisioning ── */
+    provisioning_send(PROV_KEY);
+
+    sensor_temp_t lectura = { .temperatura_c = 0.0f, .humedad_pct = act_get(), .luz_lux = 0 };
     uint32_t uptime = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
 
     ESP_LOGI(TAG, "1er push (registro + telemetria)");
-    push_telemetry(&lectura, 0, uptime, true);
-    vTaskDelay(pdMS_TO_TICKS(15000));
+    push_telemetry(&lectura, 0, uptime, true, NULL);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    int8_t cmd_valve = -1;
 
     while (1) {
-        lectura = sensor_dht22_leer();
+        lectura.humedad_pct = act_get();
         uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
-        push_telemetry(&lectura, 0, uptime, false);
-        vTaskDelay(pdMS_TO_TICKS(15000));
+
+        push_telemetry(&lectura, 0, uptime, false, &cmd_valve);
+        if (cmd_valve >= 0) {
+            act_set((uint8_t)cmd_valve);
+            cmd_valve = -1;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

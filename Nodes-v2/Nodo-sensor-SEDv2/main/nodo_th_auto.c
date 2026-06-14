@@ -18,7 +18,7 @@
 
 #include "node_config.h"
 #include "config.h"
-#include "sensor_dht22.h"
+#include "sensor_ldr.h"
 #include "push_client.h"
 
 #include "openthread/thread.h"
@@ -78,7 +78,7 @@ void app_main(void)
     esp_vfs_eventfd_register(&efd_cfg);
 
     config_init();
-    sensor_dht22_init();
+    sensor_ldr_init();
 
     static esp_openthread_config_t ot_cfg = {
         .netif_config = ESP_NETIF_DEFAULT_OPENTHREAD(),
@@ -106,20 +106,39 @@ void app_main(void)
     mode = otThreadGetLinkMode(ot);
     ESP_LOGI(TAG, "SED mode: rx=%d devtype=%d netdata=%d",
              mode.mRxOnWhenIdle, mode.mDeviceType, mode.mNetworkData);
-    otLinkSetPollPeriod(ot, 15000);
+    otLinkSetPollPeriod(ot, 30000);
     esp_openthread_lock_release();
 
-    sensor_temp_t lectura = sensor_dht22_leer();
+    sensor_data_t lectura = sensor_ldr_leer();
     uint32_t uptime = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
 
     ESP_LOGI(TAG, "1er push (registro + telemetria)");
+    provisioning_send(PROV_KEY);
     push_telemetry(&lectura, 0, uptime, true);
-    vTaskDelay(pdMS_TO_TICKS(15000));
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    float last_luz = lectura.porcentaje_luz;
+    uint32_t last_push_tick = uptime;
 
     while (1) {
-        lectura = sensor_dht22_leer();
+        lectura = sensor_ldr_leer();
         uptime = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
-        push_telemetry(&lectura, 0, uptime, false);
-        vTaskDelay(pdMS_TO_TICKS(15000));
+
+        float delta = fabsf(lectura.porcentaje_luz - last_luz);
+        bool debe_push = false;
+
+        if (delta > g_config.luz_threshold)
+            debe_push = true;
+        else if ((uptime - last_push_tick) >= g_config.heartbeat_s)
+            debe_push = true;
+
+        if (debe_push) {
+            push_telemetry(&lectura, 0, uptime, false);
+            last_luz = lectura.porcentaje_luz;
+            last_push_tick = uptime;
+        }
+
+        ESP_LOGD(TAG, "⏰ Idle %lu ms...", (unsigned long)g_config.sample_interval_ms);
+        vTaskDelay(pdMS_TO_TICKS(g_config.sample_interval_ms));
     }
 }

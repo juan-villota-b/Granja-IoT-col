@@ -37,7 +37,7 @@ async function checkValveNodes() {
   if (valveDevices.length > 0) {
     const valve = valveDevices[0];
     _valveDeviceId = valve.id;
-    const state = valve.telemetry?.valve_state;
+    const state = valve.telemetry?.valve;
     const isOpen = state === '1' || state === 1 || state === true;
 
     if (statusIndicator) {

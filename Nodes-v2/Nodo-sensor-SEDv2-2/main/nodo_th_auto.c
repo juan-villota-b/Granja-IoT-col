@@ -115,6 +115,7 @@ void app_main(void)
     lectura.temperatura_c = cal_aplicar(lectura.temperatura_c);
     uint32_t uptime = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS / 1000);
 
+    provisioning_send(PROV_KEY);
     ESP_LOGI(TAG, "1er push (registro + telemetria)");
     push_telemetry(&lectura, 0, uptime, true);
     vTaskDelay(pdMS_TO_TICKS(1000));

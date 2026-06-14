@@ -1,27 +1,28 @@
 # Granja Dashboard
 
-Dashboard IoT para monitoreo agrícola con sensores Thread conectados a ThingsBoard. Visualización en tiempo real de temperatura, humedad, batería, RSSI y uptime de nodos sensores desplegados en campo, con control remoto de válvulas de riego.
+Dashboard IoT para monitoreo agricola con sensores Thread conectados a ThingsBoard Edge. Mobile-first SPA con mapa, graficas en tiempo real, datos historicos, monitoreo unificado y control remoto de valvulas.
 
 ## Arquitectura
 
 ```
-┌──────────────┐     HTTP/WS      ┌─────────────────┐     REST API      ┌──────────────┐
-│  Navegador   │ ◄──────────────► │  FastAPI (:3000) │ ◄──────────────► │ ThingsBoard  │
-│  (SPA vanilla)│                  │  Python backend  │                  │  (:8080)     │
-└──────────────┘                  └─────────────────┘                  └──────────────┘
+ ┌──────────────┐     HTTP       ┌─────────────────┐     REST API      ┌──────────────┐
+ │  Navegador   │ ◄──────────────► │  FastAPI (:3000) │ ◄──────────────► │ TB Edge      │
+ │  (SPA vanilla)│                  │  Python backend  │                  │  (:8080)     │
+ │  Mobile-first│                  │  + WebSocket      │                  │  (host)      │
+ └──────────────┘                  └─────────────────┘                  └──────────────┘
                                          │
                                     ┌────┴────┐
-                                    │ Session │  (memoria)
-                                    │  Store  │
+                                    │ Session  │  TB Edge en el host (localhost:8080)
+                                    │ Store   │
                                     └─────────┘
 ```
 
-- **Frontend**: HTML5 + CSS3 + Vanilla JS (SPA sin frameworks)
-- **Backend**: FastAPI (Python) — proxy autenticado hacia ThingsBoard
-- **Mapa**: Leaflet 1.9 + OpenStreetMap
-- **Gráficos**: Chart.js 4.4 (tiempo real + históricos)
-- **Tiempo real**: WebSocket (servidor → cliente, poll cada 5s a ThingsBoard)
-- **IoT**: ThingsBoard CE/Edge como backend de telemetría
+- **Frontend**: vanilla JS SPA — mobile-first con bottom tab bar, drawer lateral
+- **Backend**: FastAPI (Python) — proxy autenticado hacia ThingsBoard Edge
+- **Mapa**: Leaflet 1.9, marcadores por tipo (verde=sensor, rojo=actuador)
+- **Graficos**: Chart.js 4.4 — tiempo real (eje X lineal con scrolling) + historicos
+- **IoT**: ThingsBoard Edge 4.2.0EDGE como backend de telemetria
+- **Paginas**: Dashboard (mapa), Historicos (rango personalizado), Monitoreo (sensores + riego), Valvula (RPC), Agregar Nodo (minimapa)
 
 ---
 
@@ -31,375 +32,182 @@ Dashboard IoT para monitoreo agrícola con sensores Thread conectados a ThingsBo
 granja-dashboard/
 ├── Dockerfile
 ├── requirements.txt
-├── start.sh
+├── setup_customer.py    # Script para crear customer + usuario en TB
 ├── README.md
 └── app/
-    ├── __init__.py
     ├── config.py          # Variables de entorno (TB_HOST, APP_PORT, etc.)
-    ├── auth.py            # JWT session tokens (HS256, 24h)
-    ├── tb_client.py       # Cliente HTTP asíncrono para ThingsBoard REST API
-    ├── main.py            # FastAPI: rutas, WebSocket, poll loop
+    ├── tb_client.py       # Cliente HTTP asincrono para ThingsBoard REST API
+    ├── main.py            # FastAPI: rutas, WebSocket, endpoints
     ├── templates/
-    │   ├── base.html      # Shell: sidebar, navegación SPA, SVG icons
-    │   ├── login.html     # Página de login independiente
-    │   └── dashboard.html # Dashboard: mapa + panel de telemetría
+    │   ├── base.html      # Shell: sidebar, bottom nav, top bar mobile
+    │   ├── login.html     # Pagina de login independiente
+    │   └── dashboard.html # Dashboard: mapa + panel de telemetria
     └── static/
         ├── css/
-        │   └── style.css  # Tema granja (oscuro/claro), responsive
+        │   └── style.css  # Tema agricola (oscuro/claro), mobile-first
         └── js/
-            ├── app.js         # Core: estado, router SPA, API, toasts, custom selects
-            ├── map.js         # Leaflet: marcadores, gateway, líneas de conexión
-            ├── realtime.js    # WebSocket + Chart.js sparklines
-            ├── historicos.js  # Consultas históricas, gráfico, tabla, CSV
-            └── valve.js       # Control de válvulas vía RPC
+            ├── app.js          # Core: estado, router SPA, API, toasts, custom selects
+            ├── map.js          # Leaflet: marcadores, gateway, conexiones, uptime
+            ├── realtime.js     # Chart.js: ventana 1h, eje X lineal, WebSocket
+            ├── historicos.js   # Consultas historicas, grafico, tabla, CSV
+            ├── monitoreo.js    # Overlay 3 sensores + periodos de riego + crosshair
+            └── valve.js        # Control de valvula via RPC
 ```
 
 ---
 
-## Flujo de autenticación
+## Flujo de autenticacion
 
 1. Usuario ingresa credenciales en `/login`
 2. `POST /api/login` → FastAPI autentica contra ThingsBoard (`POST /api/auth/login`)
-3. ThingsBoard devuelve un **token JWT de TB**
-4. FastAPI lo almacena en `_session_store` (dict en memoria) y emite su propio **JWT de sesión** (HS256, 24h, httpOnly cookie)
-5. Requests subsiguientes: FastAPI extrae el session token de la cookie, busca el TB token asociado, y lo usa para consultar ThingsBoard
-
-```
-POST /api/login {username, password}
-  → tb.login(username, password)
-    → POST {TB}/api/auth/login
-      ← {token: "tb_jwt_..."}
-  ← set_cookie(session_token=fastapi_jwt)
-```
-
-### Archivos clave
-
-| Archivo | Rol |
-|---------|-----|
-| `auth.py` | `create_session_token(username)` — genera JWT con `{username, exp}` |
-| `auth.py` | `decode_session_token(token)` — verifica/decodifica |
-| `main.py:24-35` | `_session_store` — dict `{session_token: tb_token}` protegido por `asyncio.Lock` |
-| `main.py:60-83` | `POST /api/login` — login completo |
-| `main.py:86-94` | `POST /api/logout` — borra sesión y cookie |
+3. ThingsBoard devuelve un **token JWT de TB** + **customer_id** (si aplica)
+4. FastAPI lo almacena en `_session_store` y emite su propio **JWT de sesion** (HS256, 24h, httpOnly cookie)
+5. Requests subsiguientes: FastAPI extrae session token, busca el TB token asociado, filtra por `customer_id` si es `CUSTOMER_USER`
 
 ---
 
-## API de dispositivos
+## API REST
 
-### `GET /api/devices`
-
-Filtra los dispositivos del tenant de ThingsBoard:
-
-1. `tb.get_tenant_devices(token)` → `GET {TB}/api/tenant/devices?pageSize=100`
-2. Filtra por nombre: solo dispositivos que **no** se llamen `Gateway-asus` y cuyo nombre empiece con `Thread` o `NODO`
-3. Para cada dispositivo filtrado, obtiene atributos y telemetría más reciente
-
-```python
-# main.py:99-129
-for dev in all_devices:
-    name = dev.get("name", "")
-    if name != gateway and not name.startswith("Thread") and not name.startswith("NODO"):
-        continue  # solo Thread nodes + gateways (excepto Gateway-asus)
-    attrs = await tb.get_device_attributes(tb_token, dev_id)
-    telemetry = await tb.get_latest_telemetry(tb_token, dev_id)
-    result.append({"id": dev_id, "name": name, "type": ..., "attributes": attrs, "telemetry": telemetry})
-```
-
-### APIs auxiliares
-
-| Endpoint | Método TB usado | Descripción |
-|----------|----------------|-------------|
-| `GET /api/telemetry/{id}` | `GET /api/plugins/telemetry/DEVICE/{id}/values/timeseries` | Último valor de cada key |
-| `GET /api/telemetry/{id}/history?keys=&startTs=&endTs=&agg=AVG&interval=` | Mismo endpoint + params | Serie temporal agregada |
-| `GET /api/attributes/{id}` | `GET /api/plugins/telemetry/DEVICE/{id}/values/attributes` | Atributos del dispositivo |
-| `POST /api/rpc/valve` | `POST /api/rpc` | Envía RPC `set_valve` al dispositivo |
+| Endpoint | Descripcion |
+|----------|-------------|
+| `POST /api/login` | Login contra TB, devuelve JWT de sesion |
+| `POST /api/logout` | Borra sesion y cookie |
+| `GET /api/me` | Perfil del usuario logueado (authority, displayName, customerId) |
+| `GET /api/devices` | Dispositivos del tenant/customer con atributos y telemetria |
+| `GET /api/telemetry/{id}` | Ultimo valor de cada key (timeseries) |
+| `GET /api/telemetry/{id}/history?keys=&startTs=&endTs=&agg=&interval=&limit=` | Historial |
+| `GET /api/attributes/{id}` | Atributos del dispositivo |
+| `GET /api/edges` | Edges del tenant/customer |
+| `GET /api/monitoreo/history?deviceIds=&startTs=&endTs=` | Datos para pagina Monitoreo |
+| `POST /api/rpc/valve` | Envia RPC `set_valve` al dispositivo |
+| `POST /api/devices/create` | Crear nuevo dispositivo con atributos + auto-asignacion |
+| `DELETE /api/devices/{id}` | Eliminar dispositivo |
 
 ---
 
-## ThingsBoard REST API — tb_client.py
+## Paginas del Dashboard
 
-El archivo `app/tb_client.py` encapsula todas las llamadas a ThingsBoard:
+### Dashboard (mapa + telemetria)
+- Mapa Leaflet interactivo con Leaflet.markercluster
+- Marcadores por tipo: verde (sensor activo), rojo (actuador), gris (inactivo)
+- Conexiones visuales entre Gateway y sensores (lineas punteadas)
+- Panel lateral con tarjetas de telemetria (variable principal + bateria + RSSI + uptime)
+- Sparkline de 24h en miniatura
+- Graficas en tiempo real con ventana deslizante de 1h
 
-### Autenticación
-```python
-async def login(username, password) -> Optional[str]:
-    POST {base}/api/auth/login
-    Body: {"username": ..., "password": ...}
-    Returns: token JWT de ThingsBoard
-```
+### Historicos
+- Rango de fechas personalizado con inputs date
+- Selector de intervalo de agregacion (desde 1 minuto hasta 24 horas, o sin agregacion)
+- Grafico de linea + tarjetas de resumen (promedio, minimo, maximo, conteo)
+- Tabla paginada (100 registros/pagina)
+- Exportacion CSV
+- Datos ordenados ascendentemente por timestamp
 
-### Dispositivos
-```python
-async def get_tenant_devices(token, page_size=100) -> list[dict]:
-    GET {base}/api/tenant/devices?pageSize=100&page=0
-    Header: X-Authorization: Bearer {token}
-    Returns: data[] con {id: {entityType, id}, name, type, label, ...}
-```
+### Monitoreo
+- Grafica unificada con 3 datasets sobrepuestos (temperatura, humedad, luz)
+- Plugin de overlay de periodos de riego (rectangulos azules traslucidos)
+- Plugin crosshair: linea vertical + puntos por dataset + tooltip personalizado
+- Selector de periodo (1h, 6h, 12h, 24h)
+- Leyenda con colores por variable
 
-### Telemetría
-```python
-async def get_latest_telemetry(token, device_id, keys="") -> dict:
-    GET {base}/api/plugins/telemetry/DEVICE/{id}/values/timeseries?keys=...
-    Returns: {temperature: "25.5", humidity: "60", ..., _ts: "1717459200000"}
-    # _ts es el timestamp del dato más reciente
+### Valvula
+- Indicador de estado (abierta/cerrada) con animacion de pulso
+- Botones tactiles ABRIR/CERRAR grandes
+- Selector de dispositivo valvula
+- Feedback toast en cada comando
 
-async def get_telemetry_history(token, device_id, keys, start_ts, end_ts, agg, interval, limit=1000) -> dict:
-    GET {base}/api/plugins/telemetry/DEVICE/{id}/values/timeseries
-        ?keys=temperature&startTs=...&endTs=...&agg=AVG&interval=3600000&limit=1000
-    Returns: {temperature: [{ts, value}, ...]}
-    # Con aggregación, TB Edge 4.2 incluye aggValues: {MIN, MAX, AVG, COUNT, SUM}
-```
-
-### Atributos
-```python
-async def get_device_attributes(token, device_id) -> dict:
-    GET {base}/api/plugins/telemetry/DEVICE/{id}/values/attributes
-    Returns: {key: value, ...}  # ej: {lat: 5.07, lng: -75.52, zone: "Invernadero 1"}
-```
-
-### RPC (Remote Procedure Call)
-```python
-async def send_rpc(token, device_id, method, params) -> bool:
-    POST {base}/api/rpc
-    Body: {"method": "set_valve", "params": {"state": 1}}
-    Returns: True si HTTP 200
-```
+### Agregar Nodo
+- Formulario: nombre, tipo (sensor/actuador), tipo de sensor, lat/lng
+- Minimapa Leaflet para seleccionar ubicacion
+- Auto-asignacion a edge y customer (si aplica)
+- Tarjeta de exito con credentials + instrucciones para el ESP32
 
 ---
 
-## Tiempo real — WebSocket + Poll Loop
-
-### Servidor (main.py:200-247)
-
-```python
-connected_websockets: dict[str, list[WebSocket]] = {}  # device_id → [ws1, ws2, ...]
-
-@app.websocket("/ws/{device_id}")
-async def websocket_endpoint(websocket, device_id):
-    # Cliente se conecta, queda en loop escuchando (keepalive)
-
-async def poll_and_broadcast():
-    while True:
-        for session_token, tb_token in sessions:
-            for dev in devices:
-                telemetry = await tb.get_latest_telemetry(...)
-                for ws in connected_websockets[dev_id]:
-                    await ws.send_text(json.dumps(telemetry))
-        await asyncio.sleep(5)  # cada 5 segundos
-```
+## Tiempo real — WebSocket
 
 ### Cliente (realtime.js)
 
-1. `startRealtimeCharts(deviceId)` — crea 3 Chart.js sparklines (temp naranja, humedad cyan, batería verde)
-2. Abre `WebSocket` a `ws://host/ws/{deviceId}`
-3. `onmessage`: agrega punto al chart, actualiza popup del marcador en el mapa, refresca info del nodo
-4. Deduplicación: no agrega puntos idénticos en < 30 segundos
-5. Máximo 60 puntos (rolling window)
-6. **Reconexión automática**: si el WS se cae, reintenta cada 3 segundos
+1. `startRealtimeCharts(deviceId)` — crea Chart.js con eje X lineal (`{x, y}` data format, `parsing`)
+2. Abre `WebSocket` — el servidor sirve los datos del ultimo poll a TB
+3. `onmessage`: usa `d._ts` del servidor como timestamp, agrega punto al chart
+4. Guardia anti-race: descarta mensajes de deviceId anterior (`_currentDeviceId`)
+5. `_slide()` timer cada 1s: actualiza `chart.options.scales.x.min/max` para ventana deslizante
+6. `_trim()`: elimina puntos fuera de la ventana de 1h
+7. Ventana fija de 1 hora (60 min) con auto-scroll
 
 ---
 
-## Frontend — Arquitectura JS
+## Tema visual / Mobile
 
-### Namespace `App` (app.js)
+### Desktop (> 768px)
+- Sidebar izquierdo (260px) con navegacion SPA, edge selector, theme toggle, logout
+- Dashboard: mapa + panel derecho (panel-w 420px)
+- Paginas internas centradas con max-width
 
-El estado de la aplicación está centralizado en un IIFE:
-
-```javascript
-const App = (() => {
-  const state = {
-    devices: [],        // lista de dispositivos cargados
-    activeNodeId: null, // nodo seleccionado actualmente
-    currentPage: 'dashboard',
-  };
-
-  // Métodos públicos
-  return {
-    state,
-    api(endpoint, options),    // fetch wrapper con auth automática
-    toast(message, type),      // notificaciones toast
-    esc(str),                  // sanitización HTML (previene XSS)
-    formatUptime(seconds),     // 3661 → "1h 1m"
-    batteryPercent(mV),        // 3700mV → 58% (Li-Ion 3000-4200mV)
-    isDeviceActive(dev),       // telemetría < 5 min?
-    isGateway(dev),            // nombre contiene "gateway"?
-    loadDevices(),             // GET /api/devices → state.devices
-    selectNode(id),            // selecciona nodo, actualiza info + charts
-    renderNodeInfo(dev),       // renderiza 6 cards de telemetría
-    navigate(page),            // router SPA
-    setup(),                   // inicializa eventos, tema, menú
-  };
-})();
-```
-
-### SPA Router (`navigate(page)`)
-
-La app es una Single Page Application. Al hacer clic en el sidebar:
-
-1. Fade out del contenido actual (150ms)
-2. `innerHTML` con el markup de la nueva página
-3. Inicializa los componentes específicos (mapa, charts, históricos, válvula)
-4. Fade in (300ms)
-
-No hay recarga de página completa en ningún momento.
-
-### Custom Selects
-
-Los `<select>` nativos se reemplazan por componentes personalizados con:
-- Trigger estilizado con chevron animado
-- Dropdown tipo cortina (`curtainDown` animation)
-- Opciones con indicador de selección
-- Sincronización bidireccional con el `<select>` nativo (accesibilidad)
-
----
-
-## Mapa — map.js
-
-### Capas
-
-| Capa | Visibilidad | Contenido |
-|------|------------|-----------|
-| `gatewayGroup` | Siempre | Gateway hexagonal con ícono de antena |
-| `nodeGroup` | Siempre | Círculos: verde (sensor), rojo (válvula), gris (inactivo) |
-| `connectionLines` | Siempre | Líneas punteadas gateway → cada nodo |
-
-### Coordenadas
-
-Los nodos pueden usar coordenadas GPS reales (`lat`, `lng` como atributos) o un grid virtual 0-100 (`pos_x`, `pos_y`) mapeado a la región de Manizales (5.07, -75.52) con escala 0.002.
-
-```javascript
-// grid virtual → lat/lng
-function toLatLng(posX, posY) {
-  return [5.07 + (posY - 50) * 0.002, -75.52 + (posX - 50) * 0.002];
-}
-```
-
-### Gateway
-
-- **Icono**: hexágono púrpura (36px) con ícono SVG de antena Thread
-- **Popup**: nombre, "Gateway Thread · Border Router", conteo de sensores activos/inactivos
-- **Líneas de conexión**: polilíneas punteadas púrpuras (activo) o grises (inactivo)
-
-### Actualización en tiempo real
-
-`updateMarkerTelemetry(deviceId, telemetry)` se llama desde el WebSocket. Cambia el color, opacidad y pulso del marcador según el estado activo/inactivo del nodo.
-
----
-
-## Históricos — historicos.js
-
-### Vistas
-
-| Vista | Rango | Intervalo de agregación | Puntos aprox. |
-|-------|-------|------------------------|---------------|
-| 24h | Últimas 24 horas | 10 minutos | ~144 |
-| 30d | Últimos 30 días | 2 horas | ~360 |
-| Custom | Fechas manuales | Configurable (1h-24h) | Variable |
-
-### API call
-
-```
-GET /api/telemetry/{deviceId}/history
-  ?keys=temperature
-  &startTs=1717400000000
-  &endTs=1717500000000
-  &agg=AVG
-  &interval=600000
-```
-
-### Componentes
-
-- **Summary cards**: promedio, mínimo, máximo, total de registros
-- **Gráfico**: Chart.js línea con tooltips y leyenda
-- **Tabla paginada**: 100 registros por página, columnas avg/min/max reales desde `aggValues`
-- **Exportar CSV**: botón que descarga los datos en formato CSV
-
-### Parseo de respuesta TB
-
-ThingsBoard Edge 4.2 devuelve datos agregados con este formato:
-```json
-{
-  "temperature": [{
-    "ts": 1717459200000,
-    "value": "25.5",
-    "aggValues": {
-      "MIN": "24.0",
-      "MAX": "26.5",
-      "AVG": "25.3",
-      "COUNT": "120",
-      "SUM": "3036.0"
-    }
-  }]
-}
-```
-
-El frontend extrae `aggValues.AVG`, `aggValues.MIN`, `aggValues.MAX` para cada fila.
-
----
-
-## Válvula — valve.js
-
-### Flujo
-
-1. `checkValveNodes()` — busca dispositivos tipo "valve" en `App.state.devices`
-2. Si encuentra uno, habilita los botones ABRIR/CERRAR y muestra el estado actual
-3. `sendValveCommand(0|1)` → `POST /api/rpc/valve {device_id, state}`
-4. Backend llama a `tb.send_rpc(token, device_id, "set_valve", {state})`
-5. Feedback vía toast notification
-
-La función usa `App.state.devices` (cache) y solo hace fetch si está vacío. El `_valveDeviceId` se cachea para no repetir búsquedas.
-
----
-
-## Tema visual
+### Mobile (< 768px)
+- **Bottom tab bar**: 5 iconos (Inicio, Historia, Monitor, Riego, Agregar)
+- **Top bar**: titulo "Granja" + theme toggle + hamburguesa que abre drawer lateral
+- Sidebar entero como drawer con overlay oscuro (cierre con Escape/click fuera)
+- Dashboard: mapa 40vh + panel abajo con scroll
+- Historicos/Monitoreo: full-width, tabla con scroll horizontal
+- Valvula: botones full-width
+- Touch targets >= 44px
 
 ### Paleta
-
 | Variable | Modo oscuro | Modo claro | Uso |
 |----------|------------|-----------|-----|
 | `--bg` | `#171410` | `#faf7f0` | Fondo principal |
-| `--surface` | `#1f1b16` | `#f0ebe0` | Sidebar, panel |
-| `--card` | `#292420` | `#ffffff` | Tarjetas, charts |
-| `--primary` | `#84cc16` | `#84cc16` | Verde lima (cultivo) |
-| `--accent` | `#f59e0b` | `#f59e0b` | Ámbar (trigo) |
+| `--primary` | `#84cc16` | `#65a30d` | Verde lima (cultivo) |
+| `--accent` | `#f59e0b` | `#f59e0b` | Ambar (trigo) |
 | `--water` | `#06b6d4` | `#06b6d4` | Cyan (agua) |
-| `--text` | `#f5f0e0` | `#292420` | Texto principal |
 
-### Toggle claro/oscuro
+---
 
-Botón ☀️ en la sidebar. Guarda preferencia en `localStorage.theme`. Los charts leen las variables CSS via `getComputedStyle()` al crearse.
+## Multi-tenant (Customer Users)
 
-### Responsive
+El dashboard soporta usuarios tipo `CUSTOMER_USER`:
 
-- **> 1100px**: layout normal (sidebar 260px + mapa + panel 400px)
-- **900-1100px**: panel reducido a 340px
-- **< 900px**: sidebar horizontal, mapa 50vh, panel abajo, menú hamburguesa
-- **< 500px**: grid de cards a 1 columna, tabs apilados
+- Backend filtra `GET /api/devices` y `GET /api/edges` segun `customer_id`
+- Customer users solo ven su edge asignado y sus dispositivos
+- Edge selector se auto-selecciona y deshabilita para customers
+- Al crear un nodo como customer, se asigna automaticamente al edge + customer
+
+### Crear un customer con su usuario
+
+```bash
+cd granja-dashboard && python3 setup_customer.py
+```
+
+El script:
+1. Autentica como tenant en TB Edge
+2. Crea Customer "Finca" (si no existe)
+3. Crea usuario `juan@finca.com` / `juan123` con authority `CUSTOMER_USER`
+4. Activa el usuario y configura password
+5. Asigna el edge "Granja-Raspberry" al customer
+6. Asigna todos los dispositivos del edge al customer
 
 ---
 
 ## Variables de entorno
 
-| Variable | Default | Descripción |
+| Variable | Default | Descripcion |
 |----------|---------|-------------|
-| `TB_HOST` | `host.docker.internal` | Host de ThingsBoard |
-| `TB_PORT` | `8080` | Puerto de ThingsBoard |
+| `TB_HOST` | `host.docker.internal` | Host de ThingsBoard Edge |
+| `TB_PORT` | `8080` | Puerto de ThingsBoard Edge |
 | `APP_PORT` | `3000` | Puerto de la app |
 | `APP_SECRET` | `granja-dashboard-secret-key-change-in-production` | Clave para firmar JWT |
 
 ---
 
-## Ejecución
+## Ejecucion
 
-### Docker (recomendado)
+### Docker (produccion local)
 
 ```bash
-docker build -t granja-dashboard .
-docker run -d --name granja-dashboard \
-  -p 3000:3000 \
-  -e TB_HOST=thingsboard \
-  -e TB_PORT=8080 \
-  granja-dashboard
+cd otbr
+./start.sh granja-dashboard   # build + run
+# Abrir http://localhost:3000
 ```
 
 ### Desarrollo local
@@ -411,14 +219,21 @@ pip install -r requirements.txt
 TB_HOST=localhost TB_PORT=8080 uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
 ```
 
-Acceder a `http://localhost:3000` — login con credenciales de ThingsBoard.
+### Acceso remoto
+
+```bash
+# Tailscale Funnel (HTTPS publico)
+sudo tailscale serve --bg http://localhost:3000
+sudo tailscale funnel --bg 3000
+# URL: https://granja-iot.tailaf11de.ts.net
+```
 
 ---
 
 ## Seguridad
 
-- **Session tokens**: JWT HS256, 24h expiración, cookies httpOnly + SameSite=Lax
+- **Session tokens**: JWT HS256, 24h expiracion, cookies httpOnly + SameSite=Lax
 - **TB tokens**: almacenados solo en memoria del servidor (nunca expuestos al cliente)
-- **Sanitización HTML**: `App.esc()` escapa todo contenido dinámico (previene XSS)
-- **API保护**: todas las rutas verifican session token antes de consultar ThingsBoard
+- **Sanitizacion HTML**: `App.esc()` escapa todo contenido dinamico
+- **Customer isolation**: filtrado server-side por customer_id para CUSTOMER_USER
 - **CORS**: no expuesto — el frontend y backend comparten origen

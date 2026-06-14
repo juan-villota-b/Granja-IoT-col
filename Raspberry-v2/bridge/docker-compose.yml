@@ -1,4 +1,5 @@
 services:
+  # ── OpenThread Border Router ──────────────────────────────────
   otbr:
     image: openthread/border-router:latest
     container_name: otbr
@@ -11,20 +12,20 @@ services:
     volumes:
       - /var/lib/otbr:/data
     environment:
-      TZ: America/Bogota
       OT_RCP_DEVICE: "spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=1000000&skip-rcp-compatibility-check"
-      OT_INFRA_IF: wlan0
-      OT_THREAD_IF: wpan0
+      OT_INFRA_IF: "wlan0"
+      OT_THREAD_IF: "wpan0"
       OT_LOG_LEVEL: "7"
       OTBR_AGENT_OPTS: >
         -d 7
         --vendor-name JuanDavidOTBR
         --model-name nRF52840-RCP
-      OT_WEB_LISTEN_ADDR: 0.0.0.0
-      OT_WEB_LISTEN_PORT: "8083"
-      OT_REST_LISTEN_ADDR: 0.0.0.0
-      OT_REST_LISTEN_PORT: "8081"
+      OT_WEB_LISTEN_ADDR: "0.0.0.0"
+      OT_WEB_LISTEN_PORT: 8083
+      OT_REST_LISTEN_ADDR: "0.0.0.0"
+      OT_REST_LISTEN_PORT: 8081
 
+  # ── ThingsBoard Edge ──────────────────────────────────────────
   mytbedge:
     restart: always
     image: "thingsboard/tb-edge:4.2.0EDGE"
@@ -37,15 +38,15 @@ services:
       CLOUD_ROUTING_KEY: c6b234d4-285a-0cf1-6e06-0697317f94a0
       CLOUD_ROUTING_SECRET: jlxsa4k6ymmzgp0dfb9v
       CLOUD_RPC_HOST: 192.168.1.207
-      CLOUD_RPC_PORT: "7070"
-      CLOUD_RPC_SSL_ENABLED: "false"
-      SPRING_PROFILES_ACTIVE: edge
+      CLOUD_RPC_PORT: 7070
+      CLOUD_RPC_SSL_ENABLED: false
     volumes:
       - tb-edge-data:/data
       - tb-edge-logs:/var/log/tb-edge
     depends_on:
       - postgres
 
+  # ── PostgreSQL (para TB Edge) ─────────────────────────────────
   postgres:
     restart: always
     image: "postgres:16"
@@ -55,6 +56,7 @@ services:
     volumes:
       - tb-edge-postgres-data:/var/lib/postgresql/data
 
+  # ── Bridge Python (CoAP Server + MQTT Gateway) ───────────────
   bridge:
     build:
       context: ./bridge
@@ -64,8 +66,6 @@ services:
     restart: unless-stopped
     volumes:
       - bridge-data:/data
-    environment:
-      TZ: America/Bogota
     depends_on:
       - mytbedge
 

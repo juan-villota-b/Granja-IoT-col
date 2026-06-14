@@ -3,8 +3,7 @@ idf_component_register(
         nodo_th_auto.c
         push_client.c
         config.c
-        sensor_temp.c
-        sensor_dht22.c
+        actuador.c
     INCLUDE_DIRS
         "."
     REQUIRES

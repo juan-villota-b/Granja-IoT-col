@@ -17,39 +17,11 @@
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;display:block;margin:0 auto 12px">
                         <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
                     </svg>
-                    Selecciona un nodo en el mapa<br>o en el selector para ver su telemetría
+                    Selecciona un nodo en el mapa<br>o en el selector para ver su telemetria
                 </p>
             </div>
-            <div class="panel-charts" id="panel-charts">
-                <div class="chart-container">
-                    <h4>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
-                        Temperatura
-                    </h4>
-                    <canvas id="chart-temp"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h4>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-                        Humedad
-                    </h4>
-                    <canvas id="chart-hum"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h4>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
-                        Batería
-                    </h4>
-                    <canvas id="chart-batt"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h4>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"><path d="M3 17l2 2 4-4"/><path d="M14 7l2 2 4-4"/><path d="M3 7v10"/><path d="M21 7v10"/></svg>
-                        RSSI
-                    </h4>
-                    <canvas id="chart-rssi"></canvas>
-                </div>
-            </div>
+            <div id="node-history-mini" class="node-history-mini"></div>
+            <div class="panel-charts" id="panel-charts"></div>
         </div>
     </div>
 </div>

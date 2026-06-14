@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct {
-    float    temp_threshold_c;
+    float    luz_threshold;
     uint16_t heartbeat_s;
     uint32_t sample_interval_ms;
     float    lat;

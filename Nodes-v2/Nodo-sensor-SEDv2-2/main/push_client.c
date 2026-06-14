@@ -12,6 +12,8 @@
 
 #include "node_config.h"
 #include "config.h"
+#define TELEMETRY_FMT 'f'
+#define TELEMETRY_KEY 't'
 
 static const char *TAG = "push";
 
@@ -232,5 +234,111 @@ esp_err_t push_telemetry(sensor_temp_t *lectura, int8_t rssi, uint32_t uptime_s,
     }
 
     ESP_LOGE(TAG, "Push fallido tras %d intentos", max_retries);
+    return ESP_FAIL;
+}
+
+/* ── Provisioning (añadido por Granja-IOT) ── */
+#include "coap3/coap.h"
+
+static uint8_t _prov_resp[256];
+static size_t  _prov_resp_len = 0;
+static bool    _prov_ack = false;
+
+static bool _cbor_str(const uint8_t *data, size_t len,
+                       const char *key, char *value, size_t max_len)
+{
+    size_t kl = strlen(key), p = 0;
+    while (p < len) {
+        uint8_t head = data[p];
+        if ((head >> 5) == 3 && (head & 0x1F) == (unsigned)kl && p + 1 + kl <= len) {
+            p++; if (memcmp(data + p, key, kl)) { p += kl; continue; }
+            p += kl; if (p >= len) return false;
+            uint8_t vh = data[p++]; unsigned vm = vh >> 5;
+            size_t vl = vh & 0x1F;
+            if (vl == 24 && p < len) vl = data[p++];
+            else if (vl == 25 && p+1 < len) { vl = (data[p]<<8)|data[p+1]; p+=2; }
+            else if (vl >= 24) return false;
+            if (vm == 3 && vl < max_len && p + vl <= len) {
+                memcpy(value, data + p, vl); value[vl] = 0; return true;
+            }
+        }
+        if (data[p] == 0xFF) break;
+        if ((head & 0x1F) < 24) p++;
+        else if ((head & 0x1F) == 24) p += 2;
+        else if ((head & 0x1F) == 25) p += 3; else p += 2;
+    }
+    return false;
+}
+
+static size_t _prov_cbor(const char *pk, uint8_t out[64])
+{
+    size_t p = 0, l = strlen(pk);
+    out[p++] = 0xA2; out[p++] = 0x68;
+    memcpy(out+p, "prov_key", 8); p += 8;
+    if (l < 24) out[p++] = (uint8_t)(0x60|l); else { out[p++]=0x78; out[p++]=(uint8_t)l; }
+    memcpy(out+p, pk, l); p += l;
+    out[p++] = 0x65; memcpy(out+p, "state", 5); p += 5;
+    out[p++] = 0x67; memcpy(out+p, "pending", 7); p += 7;
+    return p;
+}
+
+static coap_response_t _prov_handler(coap_session_t *s, const coap_pdu_t *sent,
+                                      const coap_pdu_t *rcvd, const coap_mid_t mid)
+{
+    (void)s; (void)sent; (void)mid;
+    if (!rcvd) return COAP_RESPONSE_OK;
+    if ((coap_pdu_get_code(rcvd) >> 5) == 2) {
+        _prov_ack = true;
+        size_t dlen = 0; const uint8_t *d = NULL;
+        coap_get_data(rcvd, &dlen, &d);
+        if (d && dlen < sizeof(_prov_resp)) { memcpy(_prov_resp, d, dlen); _prov_resp_len = dlen; }
+    }
+    return COAP_RESPONSE_OK;
+}
+
+esp_err_t provisioning_send(const char *prov_key)
+{
+    ESP_LOGI("prov", "Key=%.8s", prov_key);
+    uint8_t payload[64];
+    size_t plen = _prov_cbor(prov_key, payload);
+
+    otInstance *ot = esp_openthread_get_instance();
+    if (!ot) return ESP_FAIL;
+
+    coap_address_t dst; coap_address_init(&dst);
+    dst.addr.sin6.sin6_family = AF_INET6;
+    dst.addr.sin6.sin6_port = htons(BRIDGE_PORT);
+    if (inet_pton(AF_INET6, BRIDGE_IPV6, &dst.addr.sin6.sin6_addr) != 1) return ESP_FAIL;
+
+    static unsigned int mid = 300;
+    for (int a = 0; a < REGISTER_MAX_RETRIES; a++) {
+        coap_context_t *ctx = coap_new_context(NULL);
+        if (!ctx) continue;
+        coap_context_set_block_mode(ctx, COAP_BLOCK_USE_LIBCOAP);
+        coap_register_response_handler(ctx, _prov_handler);
+        coap_session_t *sess = coap_new_client_session(ctx, NULL, &dst, COAP_PROTO_UDP);
+        if (!sess) { coap_free_context(ctx); continue; }
+        coap_pdu_t *pdu = coap_pdu_init(COAP_MESSAGE_CON, COAP_REQUEST_POST,
+            ++mid, coap_session_max_pdu_size(sess));
+        if (!pdu) { coap_session_release(sess); coap_free_context(ctx); continue; }
+        uint8_t tok = 0xB0; coap_add_token(pdu, 1, &tok);
+        coap_add_option(pdu, COAP_OPTION_URI_PATH, 8, (const uint8_t*)"readings");
+        unsigned char enc[4];
+        coap_add_option(pdu, COAP_OPTION_CONTENT_FORMAT,
+            coap_encode_var_safe(enc, sizeof(enc), COAP_MEDIATYPE_APPLICATION_CBOR), enc);
+        coap_add_data(pdu, plen, payload);
+        _prov_ack = false; _prov_resp_len = 0;
+        coap_send(sess, pdu);
+        TickType_t t0 = xTaskGetTickCount();
+        while (!_prov_ack && (xTaskGetTickCount()-t0) < pdMS_TO_TICKS(REGISTER_RETRY_MS))
+            coap_io_process(ctx, 100);
+        coap_session_release(sess); coap_free_context(ctx);
+        if (_prov_ack && _prov_resp_len > 0) {
+            char cmd[16] = {0};
+            _cbor_str(_prov_resp, _prov_resp_len, "cmd", cmd, sizeof(cmd));
+            if (!strcmp(cmd, "start")) { ESP_LOGI("prov", "OK"); return ESP_OK; }
+        }
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
     return ESP_FAIL;
 }
