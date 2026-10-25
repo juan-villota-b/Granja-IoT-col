@@ -15,6 +15,7 @@ Sistema de agricultura de precisión sobre **Thread / IEEE 802.15.4**: cuatro no
 
 - [Arquitectura](#arquitectura)
 - [Flujo de datos](#flujo-de-datos)
+- [Dashboard](#dashboard)
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Nodos](#nodos)
 - [Puesta en marcha](#puesta-en-marcha)
@@ -90,6 +91,24 @@ El bridge no inicia conexiones hacia los nodos: los comandos viajan **adjuntos a
 
 ---
 
+## Dashboard
+
+Interfaz web de monitoreo y control (`dashboard/`, puerto `3000`) sobre el mapa de la finca. El panel izquierdo agrupa la navegación y las acciones, el mapa central ubica los nodos que reportan telemetría y el panel derecho muestra el detalle del nodo seleccionado con su histórico.
+
+![Dashboard de Granja IoT: mapa de la finca con los nodos, panel de navegación y detalle de telemetría del Nodo-Luz](docs/img/dashboard.png)
+
+| Zona | Elementos |
+|------|-----------|
+| Encabezado | Selector de *edge* (`Granja-Raspberry`) y contador de nodos: **Total**, **Activos** e **Inactivos** |
+| Menú **Monitoreo** | `Dashboard` (mapa en vivo), `Históricos` (consultas por rango) y `Monitoreo` (vista unificada de sensores) |
+| Menú **Control** | `Agregar Nodo` (aprovisionamiento) y `Válvula` (apertura/cierre manual del riego) |
+| Mapa | Marcadores de cada nodo (`Nodo-Luz`, `Nodo-Temperatura`, `Nodo-Humedad`, `BOMBA`) con estado activo/inactivo y tooltip de lecturas |
+| Panel derecho | Selector de nodo, estado (`sensor_sed`), `Luminosidad`, `RSSI`, gráfica histórica y rangos de tiempo `1h` / `6h` / `24h` |
+
+El nodo seleccionado muestra su última lectura, el promedio del periodo y los valores mínimo/máximo de la serie. Los nodos sin reportes recientes aparecen como **inactivos** en el contador y con el indicador rojo en el mapa.
+
+---
+
 ## Estructura del repositorio
 
 ```
@@ -116,7 +135,8 @@ El bridge no inicia conexiones hacia los nodos: los comandos viajan **adjuntos a
 │   └── thingsboard-ce/        # ThingsBoard CE central (PostgreSQL)
 ├── docs/
 │   ├── architecture.md        # Protocolos, payloads y decisiones de diseño
-│   └── deployment.md          # Despliegue paso a paso
+│   ├── deployment.md          # Despliegue paso a paso
+│   └── img/dashboard.png      # Captura del dashboard en operación
 └── README.md
 ```
 
