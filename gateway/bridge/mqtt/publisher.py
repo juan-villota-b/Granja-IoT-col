@@ -1,0 +1,124 @@
+import json, logging, paho.mqtt.client as mqtt, time
+log = logging.getLogger(__name__)
+
+
+class MQTTPublisher:
+    def __init__(self, cfg):
+        c = cfg.get("mqtt", {})
+        self._host = c.get("host", "localhost")
+        self._port = c.get("port", 1883)
+        self._gt_topic = c.get("telemetry_topic", "v1/gateway/telemetry")
+        self._ct = c.get("connect_topic", "v1/gateway/connect")
+        self._at = c.get("attributes_topic", "v1/gateway/attributes")
+        self._dt = c.get("disconnect_topic", "v1/gateway/disconnect")
+        self._rpc_topic = c.get("rpc_topic", "v1/gateway/rpc")
+        self._mode = cfg.get("mqtt_mode", "direct")
+        self._tokens = cfg.get("device_tokens", {})
+        self._gw_cl = None
+        self._connected = False
+        self._rpc_cb = None
+
+        if self._mode == "gateway":
+            self._gw_cl = mqtt.Client(
+                callback_api_version=mqtt.CallbackAPIVersion.VERSION1,
+                protocol=mqtt.MQTTv311,
+            )
+            u = c.get("username", "")
+            p = c.get("password", "")
+            if u:
+                self._gw_cl.username_pw_set(u, p)
+            self._gw_name = cfg.get("bridge", {}).get("name", "IoT-Gateway")
+            self._gw_cl.on_connect = self._on_connect
+            self._gw_cl.on_message = self._on_message
+            self._gw_cl.on_disconnect = self._on_disconnect
+
+    def _on_connect(self, client, userdata, flags, rc):
+        if rc == 0:
+            self._connected = True
+            log.info("MQTT GW OK")
+            self._gw_cl.subscribe(self._rpc_topic, qos=1)
+            self._announce_root()
+        else:
+            self._connected = False
+            log.warning("MQTT GW fail rc=%d", rc)
+
+    def _announce_root(self):
+        payload = {
+            "device": self._gw_name,
+            "type": "default",
+            "attributes": [
+                {"ts": int(time.time() * 1000), "values": {"status": "online"}}
+            ],
+        }
+        self._gw_cl.publish(self._ct, json.dumps(payload), qos=1)
+        log.info("MQTT GW root announce: %s", self._gw_name)
+
+    def _on_message(self, client, userdata, msg):
+        try:
+            d = json.loads(msg.payload)
+            dev = d.get("device")
+            if dev and self._rpc_cb:
+                data = d.get("data", {})
+                method = data.get("method")
+                params = data.get("params", {})
+                mid = d.get("id")
+                self._rpc_cb(dev, mid, method, params)
+        except Exception as e:
+            log.warning("RPC parse fail: %s", e)
+
+    def _on_disconnect(self, client, userdata, rc):
+        self._connected = False
+        if rc != 0:
+            log.warning("MQTT GW disconnect rc=%d", rc)
+
+    def connect(self, rpc_cb=None):
+        self._rpc_cb = rpc_cb
+        if self._mode == "gateway" and self._gw_cl:
+            try:
+                self._gw_cl.connect(self._host, self._port, 60)
+                self._gw_cl.loop_start()
+                log.info("MQTT GW connecting to %s:%s", self._host, self._port)
+            except Exception as e:
+                log.warning("MQTT connect fail: %s", e)
+        elif self._mode == "direct":
+            log.info("MQTT direct mode (no gateway session)")
+
+    def _publish_direct(self, dev, topic, payload):
+        token = self._tokens.get(dev)
+        if not token:
+            log.warning("No token for device %s, skipping publish", dev)
+            return
+        cl = mqtt.Client(
+            client_id=dev,
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION1,
+            protocol=mqtt.MQTTv311,
+        )
+        cl.username_pw_set(token, "")
+        try:
+            cl.connect(self._host, self._port, 5)
+            cl.loop_start()
+            cl.publish(topic, json.dumps(payload), qos=1)
+            time.sleep(0.05)
+            cl.loop_stop()
+            cl.disconnect()
+        except Exception as e:
+            log.error("MQTT direct publish %s failed: %s", dev, e)
+
+    def telemetry(self, dev, ts, values):
+        if self._mode == "direct":
+            self._publish_direct(dev, "v1/devices/me/telemetry", {"ts": ts, "values": values})
+        elif self._gw_cl and self._connected:
+            self._gw_cl.publish(self._gt_topic, json.dumps({dev: [{"ts": ts, "values": values}]}), qos=1)
+
+    def attributes(self, dev, values):
+        if self._mode == "direct":
+            ts = int(time.time() * 1000)
+            self._publish_direct(dev, "v1/devices/me/attributes", {ts: values})
+        elif self._gw_cl and self._connected:
+            self._gw_cl.publish(self._at, json.dumps({dev: values}), qos=1)
+
+    def connect_dev(self, dev, typ="default"):
+        log.info("MQTT connect_dev (no-op in direct mode): %s", dev)
+
+    def disconnect_dev(self, dev):
+        log.info("MQTT disconnect_dev (no-op in direct mode): %s", dev)

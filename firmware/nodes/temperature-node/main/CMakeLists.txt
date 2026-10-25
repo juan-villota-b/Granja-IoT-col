@@ -1,0 +1,18 @@
+idf_component_register(
+    SRCS
+        main.c
+        coap_client.c
+        runtime_config.c
+        sensor_dht11.c
+        calibration.c
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        esp_event
+        esp_netif
+        nvs_flash
+        openthread
+        vfs
+        coap
+        driver
+)

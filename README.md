@@ -1,225 +1,254 @@
-# Granja IoT — Sistema de Agricultura de Precision
+# Granja IoT
 
-Red de sensores **OpenThread** con 4 nodos **ESP32-C6**, gateway local **ThingsBoard Edge**, dashboard de monitoreo con **Leaflet + Chart.js**, control automatico de riego, y acceso remoto via **Tailscale Funnel**.
+Sistema de agricultura de precisión sobre **Thread / IEEE 802.15.4**: cuatro nodos **ESP32-C6** de bajo consumo reportan telemetría a un **gateway de campo en Raspberry Pi 4**, que la publica en **ThingsBoard Edge** y la sincroniza con **ThingsBoard CE**. Un dashboard web **FastAPI + Leaflet + Chart.js** muestra el estado del cultivo y acciona el riego automáticamente.
 
-## Arquitectura general
+![ESP32-C6](https://img.shields.io/badge/MCU-ESP32--C6-e7352c?style=flat-square)
+![Thread](https://img.shields.io/badge/Red-Thread%20802.15.4-1f6feb?style=flat-square)
+![CoAP](https://img.shields.io/badge/Transporte-CoAP%20%2B%20CBOR-2ea043?style=flat-square)
+![ThingsBoard](https://img.shields.io/badge/Plataforma-ThingsBoard%20Edge-3a86ff?style=flat-square)
+![Python](https://img.shields.io/badge/Backend-Python%203.12-3776ab?style=flat-square)
+![Docker](https://img.shields.io/badge/Despliegue-Docker%20Compose-2496ed?style=flat-square)
 
+---
+
+## Índice
+
+- [Arquitectura](#arquitectura)
+- [Flujo de datos](#flujo-de-datos)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Nodos](#nodos)
+- [Puesta en marcha](#puesta-en-marcha)
+- [Servicios y puertos](#servicios-y-puertos)
+- [Control automático de riego](#control-automático-de-riego)
+- [Stack tecnológico](#stack-tecnológico)
+- [Documentación](#documentación)
+- [Acceso y credenciales de desarrollo](#acceso-y-credenciales-de-desarrollo)
+
+---
+
+## Arquitectura
+
+El sistema se divide en dos planos: **campo** (red Thread y gateway local, funciona sin internet) y **servidor** (ThingsBoard central y dashboard público).
+
+```mermaid
+flowchart LR
+    subgraph FIELD["Campo · Thread 802.15.4"]
+        direction TB
+        N1["light-node<br/>LDR"]
+        N2["temperature-node<br/>DHT22"]
+        N3["soil-node<br/>HW-390"]
+        N4["valve-node<br/>relé + botón"]
+        GW["gateway · Raspberry Pi 4<br/>OTBR · TB Edge · PostgreSQL<br/>Bridge CoAP/MQTT"]
+        N1 -.->|CoAP/CBOR| GW
+        N2 -.->|CoAP/CBOR| GW
+        N3 -.->|CoAP/CBOR| GW
+        GW -.->|downlink| N4
+    end
+
+    subgraph CLOUD["Servidor"]
+        direction TB
+        CE["ThingsBoard CE<br/>:8080 · RPC :7070"]
+        DASH["Dashboard FastAPI<br/>:3000"]
+        CE --> DASH
+    end
+
+    GW -->|Cloud RPC| CE
+    DASH -->|REST| CE
+    USER(("Usuario")) --> DASH
 ```
-                        ┌──────────────────────────────────────┐
-                        │ PC Desarrollo (Ubuntu 24.04)          │
-                        │  ┌──────────────────────────────────┐ │
-                        │  │ TB Edge 4.2.0EDGE :8080          │ │
-                        │  │ Database interna (HSQLDB)          │ │
-                        │  │                                    │ │
-                        │  │ Granja Dashboard Docker :3000     │ │
-                        │  │ (FastAPI + Leaflet + Chart.js)    │ │
-                        │  │ → REST API → TB Edge :8080        │ │
-                        │  │ → Mobile-first responsive          │ │
-                        │  │ → Tailscale Funnel (publico)       │ │
-                        │  └──────────────────────────────────┘ │
-                        └──────────────────────────────────────┘
 
-                ┌──────────────────▼──────────────────────────┐
-                │      Raspberry Pi 4 (finca@192.168.1.114)    │
-                │  ┌────────────────────────────────────────┐  │
-                │  │ TB Edge 4.2.0EDGE :8082                │  │
-                │  │ PostgreSQL 16                           │  │
-                │  │ OTBR (nRF52840 RCP)                     │  │
-                │  │ Bridge CoAP :5685 + MQTT Gateway :1883  │  │
-                │  │ IrrigationController (python)           │  │
-                │  └────────────────────────────────────────┘  │
-                └──────────┬──────────────────────────────────┘
-                           │ Thread 802.15.4
-        ┌──────────────────┼───────────────────┐
-        │                  │                   │
-   ┌────▼────┐  ┌─────────▼──┐  ┌──────────▼──┐  ┌─────▼─────┐
-   │Nodo-Luz │  │Nodo-Temperatura│ │ Nodo-Humedad│  │  BOMBA   │
-   │SED·LDR  │  │  SED · DHT22  │  │SED · HW-390 │  │SED·relay │
-   │ light%  │  │    temp°C     │  │soil humid%  │  │ valve 0/1│
-   └─────────┘  └──────────────┘  └─────────────┘  └──────────┘
-```
+| Plano | Dónde corre | Responsabilidad |
+|-------|-------------|-----------------|
+| Nodos | ESP32-C6 | Muestreo del sensor, decisión de envío, modo SED |
+| Gateway | Raspberry Pi 4 | Border Router Thread, ThingsBoard Edge, bridge CoAP↔MQTT, riego automático |
+| Servidor | PC / host | ThingsBoard CE, dashboard web, acceso remoto |
 
-## Estructura del repositorio
-
-| Carpeta | Contenido |
-|---------|-----------|
-| [`Nodes-v2/`](Nodes-v2/) | Firmware ESP32-C6 SED — 4 nodos (Luz, Temperatura, Humedad, BOMBA) |
-| [`Raspberry-v2/`](Raspberry-v2/) | Stack Docker RPi: OTBR + TB Edge + PostgreSQL + Bridge + riego automatico |
-| [`otbr/`](otbr/) | Entorno de desarrollo PC: Granja Dashboard (FastAPI + Leaflet + Chart.js, puerto 3000) |
-| [`thingsboard-docker/`](thingsboard-docker/) | ThingsBoard CE — servidor central con PostgreSQL |
+---
 
 ## Flujo de datos
 
-```
-Sensor ESP32-C6
-  │  Lee sensor cada 30s (1s para BOMBA)
-  │  Aplica umbrales → decide si enviar
-  ├──► POST CBOR /readings → Bridge CoAP :5685 (RPi)
-  │     └── Bridge decodifica CBOR → publica MQTT gateway
-  │           └── TB Edge (RPi) recibe → almacena en PostgreSQL
-  │                 └── Cloud RPC sync → TB CE (PC) :7070
-  │                       └── Dashboard consulta TB CE :8080 (REST API)
-  │                             └── Leaflet mapa + Chart.js graficas
-  │
-  │     IrrigationController (en el bridge RPi):
-  │       └── Evalua humedad suelo, luz, temp, hora
-  │           └── ABRIR (hum < 30%) / CERRAR (hum >= 70%)
-  │               └── RPC directo a TB Edge :8082
-  │                   └── Bridge encola comando piggyback al actuador
+**Uplink (sensor → dashboard)**
 
-Comando valvula manual:
-  Dashboard → TB CE :8080 → Cloud RPC → TB Edge → MQTT → Bridge → piggyback CoAP → BOMBA ejecuta
+```
+ESP32-C6 ──POST CBOR──► Bridge :5685 ──MQTT──► TB Edge :1883
+  {id, l, r, u}          decode + publish        telemetría
+                                                     │ Cloud RPC
+                                                     ▼
+                                          TB CE :8080 ──REST──► Dashboard :3000
 ```
 
-## Hardware
+**Downlink (dashboard → actuador)**
 
-| Componente | Rol |
-|-----------|-----|
-| **ESP32-C6** (x4) | Nodos sensor/actuador con radio Thread 802.15.4 nativa |
-| **nRF52840** | RCP (Radio Co-Processor) para el OTBR |
-| **Raspberry Pi 4** | Gateway de campo: OTBR + TB Edge + Bridge + PostgreSQL |
-| **PC/Servidor** | ThingsBoard CE + Dashboard web (FastAPI) |
+```
+Dashboard ──REST──► TB CE ──Cloud RPC──► TB Edge ──MQTT──► Bridge
+                                                             │ piggyback en la
+                                                             ▼ respuesta CoAP
+                                                        valve-node
+```
 
-## Puertos de red
+El bridge no inicia conexiones hacia los nodos: los comandos viajan **adjuntos a la respuesta** del siguiente POST del nodo (piggyback sobre CoAP). Es lo que permite que un nodo durmiente reciba órdenes sin mantener el radio encendido.
 
-| Puerto | Servicio | Donde corre |
-|--------|----------|-------------|
-| `:3000` | Granja Dashboard (FastAPI + Leaflet) | PC (Docker) |
-| `:8080` | ThingsBoard CE (web + API) | PC (host) |
-| `:8082` | ThingsBoard Edge (web) | RPi |
-| `:1883` | ThingsBoard Edge (MQTT) | RPi |
-| `:8083` | OTBR Web GUI | RPi |
-| `:8081` | OTBR REST API | RPi |
-| `:5685` | Bridge CoAP Server (UDP) | RPi |
+---
 
-## Dashboard — Paginas
+## Estructura del repositorio
 
-| Pagina | Funcion |
-|--------|---------|
-| **Dashboard** | Mapa Leaflet con sensores geolocalizados + panel de telemetria en tiempo real (WebSocket) + graficas scrolling con ventana de 1h |
-| **Historicos** | Consulta por rango de fechas + selector de intervalo de agregacion + grafico + tabla paginada + exportacion CSV |
-| **Monitoreo** | Grafica unificada: 3 sensores (temp/hum/luz) sobrepuestos + periodos de riego como overlay azul + crosshair con tooltip independiente por dataset |
-| **Valvula** | Control ABRIR/CERRAR con botones tactiles + estado en tiempo real |
-| **Agregar Nodo** | Formulario con minimapa para geolocalizar nuevos nodos + auto-asignacion a customer/edge |
+```
+.
+├── firmware/                  # Firmware ESP-IDF de los nodos ESP32-C6
+│   ├── nodes/
+│   │   ├── light-node/        # Nodo-Luz        · LDR       · light %
+│   │   ├── temperature-node/  # Nodo-Temperatura · DHT22    · temperature °C
+│   │   ├── soil-node/         # Nodo-Humedad    · HW-390    · humidity %
+│   │   └── valve-node/        # BOMBA           · relé GPIO · valve 0/1
+│   └── README.md
+├── gateway/                   # Gateway de campo (Raspberry Pi 4)
+│   ├── bridge/                # Servidor CoAP + publisher MQTT + control de riego
+│   ├── scripts/               # Arranque del stack y servicio ip6tables
+│   ├── docker-compose.yml     # OTBR · ThingsBoard Edge · PostgreSQL · Bridge
+│   └── README.md
+├── dashboard/                 # Dashboard de monitoreo (FastAPI + Leaflet + Chart.js)
+│   ├── app/                   # Backend, templates y SPA en JS
+│   ├── scripts/               # Ejecución local y docker compose
+│   ├── tools/                 # Utilidades de aprovisionamiento
+│   ├── docker-compose.yml
+│   └── README.md
+├── infra/
+│   └── thingsboard-ce/        # ThingsBoard CE central (PostgreSQL)
+├── docs/
+│   ├── architecture.md        # Protocolos, payloads y decisiones de diseño
+│   └── deployment.md          # Despliegue paso a paso
+└── README.md
+```
+
+---
 
 ## Nodos
 
-| Nodo | Sensor | NODE_ID | Medicion |
-|------|--------|---------|----------|
-| Nodo-Luz | LDR | Nodo-Luz | light% (porcentaje de luz) |
-| Nodo-Temperatura | DHT22 | Nodo-Temperatura | temperature°C |
-| Nodo-Humedad | HW-390 | Nodo-Humedad | soil humidity% |
-| BOMBA | Relay GPIO7 | BOMBA | valve 0/1 (actuador) |
+| Nodo | Carpeta | Sensor / actuador | `NODE_ID` | Variable publicada | Zona |
+|------|---------|-------------------|-----------|--------------------|------|
+| Nodo-Luz | `light-node` | LDR (ADC) | `Nodo-Luz` | `light` (%) | A |
+| Nodo-Temperatura | `temperature-node` | DHT22 | `Nodo-Temperatura` | `temperature` (°C) | B |
+| Nodo-Humedad | `soil-node` | HW-390 (ADC) | `Nodo-Humedad` | `humidity` (%) | C |
+| BOMBA | `valve-node` | Relé + pulsador | `BOMBA` | `valve` (0/1) | D |
 
-## Control automatico de riego
+Todos operan como **Sleepy End Device**: radio apagado entre sondeos, CPU en *tickless idle* y envío solo por cambio significativo o heartbeat.
 
-El bridge (en la RPi) ejecuta `Raspberry-v2/bridge/automation/irrigation.py` que evalua toda la telemetria entrante:
+---
 
-- **ABRIR** valvula si humedad suelo < 30% (y luz >= 10%, temp < 35°C, hora 6-23h, cooldown >= 60s)
-- **CERRAR** valvula inmediatamente si humedad >= 70%
-- Los comandos RPC van directo a TB Edge en la RPi (`192.168.1.114:8082`)
+## Puesta en marcha
 
-Umbrales en `Raspberry-v2/bridge/config.yaml`:
+### Requisitos
 
-```yaml
-irrigation:
-  enabled: true
-  soil_low_pct: 30
-  soil_high_pct: 70
-  light_min_pct: 10
-  temp_max_c: 35.0
-  min_cycle_seconds: 60
-  allowed_start_hour: 6
-  allowed_end_hour: 23
-```
+| Herramienta | Uso |
+|-------------|-----|
+| ESP-IDF ≥ 5.5 | Compilar y flashear el firmware |
+| Docker + Docker Compose | Gateway y dashboard |
+| Python 3.12 | Desarrollo del bridge y del dashboard |
+| nRF52840 | RCP del Border Router Thread |
 
-## Acceso remoto (Tailscale Funnel)
-
-El dashboard esta expuesto al internet via **Tailscale Funnel** con HTTPS:
-
-```
-https://granja-iot.tailaf11de.ts.net
-```
-
-Para activarlo en otro equipo:
+### 1. Servidor central
 
 ```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up
-sudo tailscale serve --bg http://localhost:3000
-sudo tailscale funnel --bg 3000
+cd infra/thingsboard-ce
+docker compose up -d          # consola en http://localhost:8080
 ```
 
-## Usuarios multi-tenant
-
-El dashboard soporta usuarios tipo **CUSTOMER_USER** de ThingsBoard:
-
-- El backend filtra devices y edges segun el `customer_id` del usuario logueado
-- Los customer users solo ven su edge asignado y sus dispositivos
-- Al crear un nodo como customer user, se asigna automaticamente al customer
-
-Para crear un customer con su usuario:
+### 2. Dashboard
 
 ```bash
-cd otbr/granja-dashboard && python3 setup_customer.py
+cd dashboard
+./scripts/compose-up.sh       # build + run en http://localhost:3000
 ```
 
-## Tecnologias
+### 3. Gateway de campo (Raspberry Pi)
 
-| Capa | Tecnologia |
+```bash
+ssh finca@<ip-raspberry>
+cd ~/gateway
+./scripts/up.sh               # OTBR + TB Edge + PostgreSQL + Bridge
+```
+
+### 4. Nodos
+
+```bash
+cd firmware/nodes/light-node
+. $IDF_PATH/export.sh
+idf.py set-target esp32c6
+idf.py build
+idf.py -p /dev/ttyACM0 flash monitor
+```
+
+Repetir en cada carpeta de nodo. El detalle de cada paso está en [`docs/deployment.md`](docs/deployment.md).
+
+---
+
+## Servicios y puertos
+
+| Puerto | Servicio | Host |
+|--------|----------|------|
+| `3000` | Dashboard (FastAPI) | PC |
+| `8080` | ThingsBoard CE (web + API) | PC |
+| `7070` | ThingsBoard Cloud RPC | PC |
+| `8081` | OTBR REST API | Raspberry Pi |
+| `8082` | ThingsBoard Edge (web) | Raspberry Pi |
+| `8083` | OTBR Web GUI | Raspberry Pi |
+| `1883` | MQTT de ThingsBoard Edge | Raspberry Pi |
+| `5685/udp` | Bridge CoAP (`POST /readings`) | Raspberry Pi |
+
+---
+
+## Control automático de riego
+
+El `IrrigationController` del bridge evalúa la telemetría entrante y decide sobre la válvula:
+
+| Condición | Acción |
+|-----------|--------|
+| Humedad de suelo < 30 % **y** luz ≥ 10 % **y** temp < 35 °C **y** hora entre 6 y 23 **y** cooldown ≥ 60 s | Abrir |
+| Humedad de suelo ≥ 70 % | Cerrar de inmediato |
+
+Los umbrales se configuran en `gateway/bridge/config.yaml`. La lógica completa está en [`docs/architecture.md`](docs/architecture.md#control-automático-de-riego).
+
+---
+
+## Stack tecnológico
+
+| Capa | Tecnología |
 |------|-----------|
 | Red IoT | Thread (IEEE 802.15.4) + 6LoWPAN + IPv6 |
-| Aplicacion IoT | CoAP + CBOR (binario compacto) |
+| Aplicación IoT | CoAP + CBOR |
+| Firmware | ESP-IDF · FreeRTOS · OpenThread · libcoap |
 | Gateway | OpenThread Border Router (Docker) |
-| Plataforma IoT | ThingsBoard Edge 4.2.0EDGE |
-| Bridge | Python (aiocoap + paho-mqtt) |
-| Dashboard | FastAPI + Leaflet + Chart.js (Vanilla JS SPA) |
-| Almacenamiento | PostgreSQL 16 (RPi) / HSQLDB (PC local) |
+| Plataforma IoT | ThingsBoard Edge 4.2.0EDGE + ThingsBoard CE |
+| Bridge | Python · aiocoap · paho-mqtt |
+| Dashboard | FastAPI · Jinja2 · Leaflet · Chart.js (SPA vanilla) |
+| Almacenamiento | PostgreSQL 16 |
 | Contenedores | Docker Compose |
-| Acceso remoto | Tailscale Funnel (HTTPS publico) |
+| Acceso remoto | Tailscale Funnel (HTTPS) |
 
-## Credenciales por defecto
+---
 
-| Sistema | URL | Usuario | Contrasena |
+## Documentación
+
+| Documento | Contenido |
+|-----------|-----------|
+| [`docs/architecture.md`](docs/architecture.md) | Protocolos, formato CBOR, tópicos MQTT, estrategia de bajo consumo, lógica de riego |
+| [`docs/deployment.md`](docs/deployment.md) | Despliegue de servidor, gateway y nodos; acceso remoto; diagnóstico |
+| [`firmware/README.md`](firmware/README.md) | Estructura del firmware y guía de compilación |
+| [`gateway/README.md`](gateway/README.md) | Servicios del gateway y operación en campo |
+| [`dashboard/README.md`](dashboard/README.md) | API REST, páginas y diseño de la interfaz |
+| [`infra/thingsboard-ce/README.md`](infra/thingsboard-ce/README.md) | Servidor ThingsBoard CE y sincronización con los Edge |
+
+---
+
+## Acceso y credenciales de desarrollo
+
+Valores por defecto de un entorno de laboratorio. **Deben cambiarse antes de cualquier despliegue real.**
+
+| Sistema | URL | Usuario | Contraseña |
 |---------|-----|---------|------------|
 | ThingsBoard CE | `http://localhost:8080` | `tenant@thingsboard.org` | `tenant` |
-| ThingsBoard Edge (RPi) | `http://192.168.1.114:8082` | `tenant@thingsboard.org` | `tenant` |
-| Dashboard | `http://localhost:3000` | `tenant@thingsboard.org` | `tenant` |
-| Dashboard (Funnel) | `https://granja-iot.tailaf11de.ts.net` | `tenant@thingsboard.org` | `tenant` |
-| Customer user | `http://localhost:3000/login` | `juan@finca.com` | `juan123` |
-| RPi "finca" | `ssh finca@192.168.1.114` | `finca` | `12345` |
+| ThingsBoard Edge | `http://<ip-raspberry>:8082` | `tenant@thingsboard.org` | `tenant` |
+| Dashboard (tenant) | `http://localhost:3000` | `tenant@thingsboard.org` | `tenant` |
+| Dashboard (customer) | `http://localhost:3000` | `juan@finca.com` | `juan123` |
 
-## Como empezar
-
-### 1. Levantar ThingsBoard Edge (PC local)
-
-TB CE debe estar corriendo en `localhost:8080`. Si usas Docker:
-
-### 2. Levantar el Dashboard
-
-```bash
-cd otbr
-./start.sh granja-dashboard   # build + run
-# Abrir http://localhost:3000
-```
-
-### 3. Levantar el stack de campo (RPi)
-
-```bash
-ssh finca@192.168.1.114
-cd ~/Raspberry-v2
-./start.sh
-```
-
-### 4. Flashear nodos ESP32-C6
-
-```bash
-cd Nodes-v2/Nodo-sensor-SEDv2-ldr
-. ~/.espressif/v5.5.4/esp-idf/export.sh
-SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.sed" idf.py reconfigure
-idf.py build
-idf.py -p /dev/ttyACM1 flash
-
-# Repetir para SEDv2-temp (Temperatura), SEDv2-hum (Humedad), SEDv2-valve (BOMBA)
-# Cambiar el puerto segun corresponda
-```
+El dashboard puede exponerse por HTTPS con **Tailscale Funnel**; el procedimiento está en [`docs/deployment.md`](docs/deployment.md#acceso-remoto).

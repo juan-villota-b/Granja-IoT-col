@@ -22,3 +22,10 @@ venv/
 *.swp
 *.swo
 .pytest_cache/
+
+# Agent instructions (local only)
+AGENTS.md
+.atl/
+
+# ODD working documents (local only)
+odd/

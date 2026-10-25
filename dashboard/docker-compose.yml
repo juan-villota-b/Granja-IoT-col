@@ -1,0 +1,17 @@
+services:
+  # ── Dashboard (FastAPI + Leaflet + Chart.js) ──────────────────
+  # OTBR, ThingsBoard Edge and PostgreSQL run on the field gateway
+  # (see ../gateway/docker-compose.yml); this stack only serves the UI.
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: granja-dashboard
+    ports:
+      - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    environment:
+      TB_HOST: "host.docker.internal"
+      TB_PORT: "8080"
