@@ -206,7 +206,7 @@ El `IrrigationController` del bridge evalúa la telemetría entrante y decide so
 | Humedad de suelo < 30 % **y** luz ≥ 10 % **y** temp < 35 °C **y** hora entre 6 y 23 **y** cooldown ≥ 60 s | Abrir |
 | Humedad de suelo ≥ 70 % | Cerrar de inmediato |
 
-Los umbrales se configuran en `gateway/bridge/config.yaml`. La lógica completa está en [`docs/architecture.md`](docs/architecture.md#control-automático-de-riego).
+Los umbrales se  configuran en `gateway/bridge/config.yaml`. La lógica completa está en [`docs/architecture.md`](docs/architecture.md#control-automático-de-riego).
 
 ---
 
